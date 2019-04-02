@@ -14,7 +14,6 @@ package org.talend.components.adlsgen2.service;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.talend.components.adlsgen2.datastore.ADLSGen2Connection;
 import org.talend.components.adlsgen2.datastore.Constants.HeaderConstants;
 import org.talend.sdk.component.api.service.http.Configurer;
 
@@ -25,7 +24,8 @@ public class AccessTokenConfigurer implements Configurer {
 
     @Override
     public void configure(Connection connection, ConfigurerConfiguration configuration) {
-        final ADLSGen2Connection conn = configuration.get("connection", ADLSGen2Connection.class);
+        final org.talend.components.adlsgen2.datastore.AdlsGen2Connection conn = configuration.get("connection",
+                org.talend.components.adlsgen2.datastore.AdlsGen2Connection.class);
         log.debug("[configure] [{}] {}", connection.getMethod(), connection.getUrl());
         connection //
                 .withHeader(HeaderConstants.CONTENT_TYPE, CONTENT_TYPE_APPLICATION_X_WWW_FORM_URLENCODED) //

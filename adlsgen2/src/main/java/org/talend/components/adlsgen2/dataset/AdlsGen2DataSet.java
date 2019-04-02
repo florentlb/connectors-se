@@ -18,7 +18,6 @@ import static org.talend.components.adlsgen2.service.UIActionService.ACTION_FILE
 
 import java.io.Serializable;
 
-import org.talend.components.adlsgen2.datastore.ADLSGen2Connection;
 import org.talend.components.adlsgen2.service.CSVFormat;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.Suggestable;
@@ -30,7 +29,7 @@ import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
 
 @Data
-@DataSet("ADLSGen2DataSet")
+@DataSet("AdlsGen2DataSet")
 @GridLayout({ //
         @GridLayout.Row("connection"), //
         @GridLayout.Row("filesystem"), //
@@ -41,12 +40,12 @@ import org.talend.sdk.component.api.meta.Documentation;
         @GridLayout.Row("csvSchema"), //
 })
 @Documentation("ADLS DataSet")
-public class ADLSGen2DataSet implements Serializable {
+public class AdlsGen2DataSet implements Serializable {
 
     @Option
     @Required
     @Documentation("ADLS Gen2 Connection")
-    private ADLSGen2Connection connection;
+    private org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection;
 
     @Option
     @Required

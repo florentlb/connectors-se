@@ -14,17 +14,17 @@ package org.talend.components.adlsgen2.service;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.talend.components.adlsgen2.datastore.ADLSGen2Connection;
-import org.talend.components.adlsgen2.datastore.ADLSGen2Connection.AuthMethod;
+import org.talend.components.adlsgen2.datastore.AdlsGen2Connection.AuthMethod;
 import org.talend.components.adlsgen2.datastore.Constants.HeaderConstants;
 import org.talend.sdk.component.api.service.http.Configurer;
 
 @Slf4j
-public class ADLSGen2APIConfigurer implements Configurer {
+public class AdlsGen2APIConfigurer implements Configurer {
 
     @Override
     public void configure(final Connection connection, final ConfigurerConfiguration configuration) {
-        final ADLSGen2Connection conn = configuration.get("connection", ADLSGen2Connection.class);
+        final org.talend.components.adlsgen2.datastore.AdlsGen2Connection conn = configuration.get("connection",
+                org.talend.components.adlsgen2.datastore.AdlsGen2Connection.class);
         final String auth = configuration.get("auth", String.class);
         log.debug("[configure] connection {}", conn);
         log.warn("[configure] [{}] {}", connection.getMethod(), connection.getUrl());

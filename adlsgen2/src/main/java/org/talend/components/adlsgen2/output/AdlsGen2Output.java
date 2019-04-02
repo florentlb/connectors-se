@@ -22,7 +22,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import org.talend.components.adlsgen2.service.ADLSGen2Service;
+import org.talend.components.adlsgen2.service.AdlsGen2Service.BlobInformations;
 import org.talend.components.adlsgen2.service.I18n;
 import org.talend.sdk.component.api.component.Icon;
 import org.talend.sdk.component.api.component.Icon.IconType;
@@ -39,22 +39,24 @@ import com.csvreader.CsvWriter;
 @Slf4j
 @Version(1)
 @Icon(value = IconType.FILE_CSV_O)
-@Processor(name = "ADLSGen2Output", family = "adlsgen2")
+@Processor(name = "AdlsGen2Output", family = "AdlsGen2")
 @Documentation("Azure Data Lake Storage Gen2 Output")
-public class ADLSGen2Output implements Serializable {
+public class AdlsGen2Output implements Serializable {
 
-    private OutputConfiguration configuration;
-
-    private final ADLSGen2Service service;
+    private final org.talend.components.adlsgen2.service.AdlsGen2Service service;
 
     private final I18n i18n;
+
+    private OutputConfiguration configuration;
 
     private char fieldDelimiter;
 
     private char recordDelimiter;
 
-    public ADLSGen2Output(@Option("configuration") final OutputConfiguration configuration, final ADLSGen2Service service,
-            final I18n i18n) {
+    private transient long position = 0;
+
+    public AdlsGen2Output(@Option("configuration") final OutputConfiguration configuration,
+            final org.talend.components.adlsgen2.service.AdlsGen2Service service, final I18n i18n) {
         this.configuration = configuration;
         this.service = service;
         this.i18n = i18n;
@@ -64,10 +66,21 @@ public class ADLSGen2Output implements Serializable {
 
     @PostConstruct
     public void init() {
+        // TODO get lease
+        BlobInformations blob = service.getBlobInformations(configuration.getDataSet());
+        position = blob.getContentLength();
+        log.warn("[init] {}.", blob);
+        if (configuration.isOverwrite() || !blob.isExists()) {
+            service.pathCreate(configuration);
+            position = 0;
+        }
     }
 
     @PreDestroy
     public void release() {
+        log.warn("[release]");
+        service.flushBlob(configuration, position);
+        // TODO release lease
     }
 
     private String[] getStringArrayFromRecord(Record record) {
@@ -105,7 +118,8 @@ public class ADLSGen2Output implements Serializable {
             throw new IllegalStateException("format not implemented");
         }
         log.warn("[onElement] writing {}", content);
-        service.pathUpdate(configuration, content);
+        service.pathUpdate(configuration, content, position);
+        position += content.length(); // cumulate length of written records
     }
 
 }

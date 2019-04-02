@@ -19,19 +19,18 @@ import static org.talend.sdk.component.junit.SimpleFactory.configurationByExampl
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.talend.components.adlsgen2.ADLSGen2TestBase;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.junit5.WithComponents;
 import org.talend.sdk.component.runtime.manager.chain.Job;
 
 @org.talend.sdk.component.junit.http.junit5.HttpApi(useSsl = true, responseLocator = org.talend.sdk.component.junit.http.internal.impl.AzureStorageCredentialsRemovalResponseLocator.class)
 @WithComponents("org.talend.components.adlsgen2")
-class ADLSGen2InputTest extends ADLSGen2TestBase {
+class AdlsGen2InputTest extends org.talend.components.adlsgen2.AdlsGen2TestBase {
 
     @Test
     public void produce() {
         final String config = configurationByExample().forInstance(inputConfiguration).configured().toQueryString();
-        Job.components().component("mycomponent", "adlsgen2://ADLSGen2Input?" + config) //
+        Job.components().component("mycomponent", "AdlsGen2://AdlsGen2Input?" + config) //
                 .component("collector", "test://collector") //
                 .connections() //
                 .from("mycomponent") //

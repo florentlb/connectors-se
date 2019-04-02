@@ -12,12 +12,12 @@
 // ============================================================================
 package org.talend.components.adlsgen2.service;
 
-import org.talend.sdk.component.api.service.http.Configurer;
-
 import lombok.extern.slf4j.Slf4j;
 
+import org.talend.sdk.component.api.service.http.Configurer;
+
 @Slf4j
-public class ADLSGen2UpdateConfigurer implements Configurer {
+public class AdlsGen2UpdateConfigurer implements Configurer {
 
     @Override
     public void configure(Connection connection, ConfigurerConfiguration configuration) {

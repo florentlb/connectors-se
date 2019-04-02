@@ -16,7 +16,6 @@ import lombok.Data;
 
 import java.io.Serializable;
 
-import org.talend.components.adlsgen2.dataset.ADLSGen2DataSet;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.ui.DefaultValue;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
@@ -32,7 +31,7 @@ public class OutputConfiguration implements Serializable {
 
     @Option
     @Documentation("Dataset")
-    private ADLSGen2DataSet dataSet;
+    private org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet;
 
     @Option
     @DefaultValue("false")

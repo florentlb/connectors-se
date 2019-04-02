@@ -19,7 +19,6 @@ import java.util.ListIterator;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import org.talend.components.adlsgen2.service.ADLSGen2Service;
 import org.talend.components.adlsgen2.service.I18n;
 import org.talend.sdk.component.api.component.Icon;
 import org.talend.sdk.component.api.component.Icon.IconType;
@@ -34,13 +33,13 @@ import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 @Slf4j
 @Version(1)
 @Icon(value = IconType.FILE_CSV_O)
-@Emitter(name = "ADLSGen2Input", family = "adlsgen2")
+@Emitter(name = "AdlsGen2Input", family = "AdlsGen2")
 @Documentation("Azure Data Lake Storage Gen2 Input")
-public class ADLSGen2Input implements Serializable {
+public class AdlsGen2Input implements Serializable {
 
     private InputConfiguration configuration;
 
-    private final ADLSGen2Service service;
+    private final org.talend.components.adlsgen2.service.AdlsGen2Service service;
 
     private final RecordBuilderFactory recordBuilder;
 
@@ -48,8 +47,9 @@ public class ADLSGen2Input implements Serializable {
 
     private ListIterator<Record> records;
 
-    public ADLSGen2Input(@Option("configuration") final InputConfiguration configuration, final ADLSGen2Service service,
-            final RecordBuilderFactory recordBuilderFactory, final I18n i18n) {
+    public AdlsGen2Input(@Option("configuration") final InputConfiguration configuration,
+            final org.talend.components.adlsgen2.service.AdlsGen2Service service, final RecordBuilderFactory recordBuilderFactory,
+            final I18n i18n) {
         this.configuration = configuration;
         this.service = service;
         this.recordBuilder = recordBuilderFactory;

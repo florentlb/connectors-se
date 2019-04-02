@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.talend.components.adlsgen2.ADLSGen2TestBase;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.junit.http.internal.impl.AzureStorageCredentialsRemovalResponseLocator;
 import org.talend.sdk.component.junit.http.junit5.HttpApi;
@@ -32,13 +31,13 @@ import org.talend.sdk.component.junit5.WithComponents;
 @Slf4j
 @HttpApi(useSsl = true, responseLocator = AzureStorageCredentialsRemovalResponseLocator.class)
 @WithComponents("org.talend.components.adlsgen2")
-class ADLSGen2ServiceTest extends ADLSGen2TestBase {
+class AdlsGen2ServiceTest extends org.talend.components.adlsgen2.AdlsGen2TestBase {
 
     @Service
-    ADLSGen2Service service;
+    AdlsGen2Service service;
 
     @Service
-    ADLSGen2APIClient serviceTestClient;
+    AdlsGen2APIClient serviceTestClient;
 
     @Service
     AccessTokenProvider accessTokenProvider;
@@ -147,9 +146,9 @@ class ADLSGen2ServiceTest extends ADLSGen2TestBase {
     void pathUpdateFile() {
         String path = "myNewFolder/customer.csv";
         outputConfiguration.getDataSet().setBlobPath(path);
-        outputConfiguration.setOverwrite(false);
+        outputConfiguration.setOverwrite(true);
         String content = "ABC;DEF;123;true;GBG\n";
-        Object result = service.pathUpdate(outputConfiguration, content);
+        Object result = service.pathUpdate(outputConfiguration, content, 0);
         log.warn("[pathList] {}", result);
     }
 

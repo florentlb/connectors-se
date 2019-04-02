@@ -13,7 +13,6 @@
 package org.talend.components.adlsgen2.datastore;
 
 import lombok.Data;
-import lombok.ToString;
 
 import static org.talend.components.adlsgen2.service.UIActionService.ACTION_HEALTHCHECK;
 
@@ -28,8 +27,7 @@ import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
 
 @Data
-@ToString
-@DataStore("ADLSGen2Connection")
+@DataStore("AdlsGen2Connection")
 @Checkable(ACTION_HEALTHCHECK)
 @GridLayout({ //
         @GridLayout.Row("accountName"), //
@@ -40,7 +38,7 @@ import org.talend.sdk.component.api.meta.Documentation;
         @GridLayout.Row("sas"), //
 })
 @Documentation("The datastore to connect Azure Data Lake Storage Gen2")
-public class ADLSGen2Connection implements Serializable {
+public class AdlsGen2Connection implements Serializable {
 
     @Option
     @Required
@@ -53,31 +51,31 @@ public class ADLSGen2Connection implements Serializable {
     private AuthMethod authMethod;
 
     @Option
-    @Required
+    // @Required
     @ActiveIf(target = "authMethod", value = "SharedKey")
     @Documentation("Storage Shared Key")
     private String sharedKey;
 
     @Option
-    @Required
+    // @Required
     @ActiveIf(target = "authMethod", value = "AccessToken")
     @Documentation("Tenant Id")
     private String tenantId;
 
     @Option
-    @Required
+    // @Required
     @ActiveIf(target = "authMethod", value = "AccessToken")
     @Documentation("Client Id")
     private String clientId;
 
     @Option
-    @Required
+    // @Required
     @ActiveIf(target = "authMethod", value = "AccessToken")
     @Documentation("Client Secret")
     private String clientSecret;
 
     @Option
-    @Required
+    // @Required
     @ActiveIf(target = "authMethod", value = "SAS")
     @Documentation("Shared Access Signature")
     private String sas;

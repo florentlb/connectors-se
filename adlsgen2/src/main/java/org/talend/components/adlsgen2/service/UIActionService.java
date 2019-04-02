@@ -21,7 +21,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.talend.components.adlsgen2.datastore.ADLSGen2Connection;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.completion.SuggestionValues;
@@ -39,13 +38,14 @@ public class UIActionService implements Serializable {
     public static final String ACTION_FILESYSTEMS = "ACTION_FILESYSTEMS";
 
     @Service
-    private ADLSGen2Service service;
+    private AdlsGen2Service service;
 
     @Service
     private I18n i18n;
 
     @HealthCheck(ACTION_HEALTHCHECK)
-    public HealthCheckStatus validateConnection(@Option final ADLSGen2Connection connection) {
+    public HealthCheckStatus validateConnection(
+            @Option final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
         log.info("[validateConnection] {}.", connection);
         try {
             service.filesystemList(connection);
@@ -56,7 +56,7 @@ public class UIActionService implements Serializable {
     }
 
     @Suggestions(ACTION_FILESYSTEMS)
-    public SuggestionValues filesystemList(@Option final ADLSGen2Connection connection) {
+    public SuggestionValues filesystemList(@Option final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
         log.warn("[filesystemList] connection: {}", connection);
         List<Item> items = new ArrayList<>();
         for (String s : service.filesystemList(connection)) {

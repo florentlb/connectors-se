@@ -19,14 +19,11 @@ import java.io.Serializable;
 import java.util.Properties;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.talend.components.adlsgen2.dataset.ADLSGen2DataSet;
-import org.talend.components.adlsgen2.dataset.ADLSGen2DataSet.BlobFormat;
-import org.talend.components.adlsgen2.datastore.ADLSGen2Connection;
-import org.talend.components.adlsgen2.datastore.ADLSGen2Connection.AuthMethod;
+import org.talend.components.adlsgen2.dataset.AdlsGen2DataSet.BlobFormat;
+import org.talend.components.adlsgen2.datastore.AdlsGen2Connection.AuthMethod;
 import org.talend.components.adlsgen2.datastore.SharedKeyUtils;
 import org.talend.components.adlsgen2.input.InputConfiguration;
 import org.talend.components.adlsgen2.output.OutputConfiguration;
-import org.talend.components.adlsgen2.service.ADLSGen2Service;
 import org.talend.components.adlsgen2.service.CSVFormat.FieldDelimiter;
 import org.talend.components.adlsgen2.service.CSVFormat.RecordDelimiter;
 import org.talend.sdk.component.api.record.Record;
@@ -42,7 +39,7 @@ import org.talend.sdk.component.junit5.WithComponents;
 @Slf4j
 @org.talend.sdk.component.junit.http.junit5.HttpApi(useSsl = true, responseLocator = org.talend.sdk.component.junit.http.internal.impl.AzureStorageCredentialsRemovalResponseLocator.class)
 @WithComponents("org.talend.components.adlsgen2")
-public class ADLSGen2TestBase implements Serializable {
+public class AdlsGen2TestBase implements Serializable {
 
     @org.junit.ClassRule
     public static final JUnit5HttpApi API = new JUnit5HttpApi().activeSsl();
@@ -92,13 +89,13 @@ public class ADLSGen2TestBase implements Serializable {
     protected RecordBuilderFactory recordBuilderFactory;
 
     @Service
-    protected ADLSGen2Service service;
+    protected org.talend.components.adlsgen2.service.AdlsGen2Service service;
 
     protected SharedKeyUtils utils;
 
-    protected ADLSGen2Connection connection;
+    protected org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection;
 
-    protected ADLSGen2DataSet dataSet;
+    protected org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet;
 
     protected InputConfiguration inputConfiguration;
 
@@ -109,9 +106,9 @@ public class ADLSGen2TestBase implements Serializable {
 
     @BeforeEach
     void setUp() {
-        service = new ADLSGen2Service();
+        service = new org.talend.components.adlsgen2.service.AdlsGen2Service();
 
-        connection = new ADLSGen2Connection();
+        connection = new org.talend.components.adlsgen2.datastore.AdlsGen2Connection();
         connection.setAuthMethod(AuthMethod.SAS);
         connection.setTenantId(tenantId);
         connection.setAccountName(accountName);
@@ -120,7 +117,7 @@ public class ADLSGen2TestBase implements Serializable {
         connection.setClientSecret(clientSecret);
         connection.setSas(sas);
 
-        dataSet = new ADLSGen2DataSet();
+        dataSet = new org.talend.components.adlsgen2.dataset.AdlsGen2DataSet();
         dataSet.setConnection(connection);
         dataSet.setFilesystem(storageFs);
         dataSet.setBlobPath("myNewFolder/customer_20190325.csv");

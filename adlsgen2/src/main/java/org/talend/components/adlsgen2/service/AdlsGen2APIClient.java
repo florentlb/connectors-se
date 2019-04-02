@@ -16,7 +16,6 @@ import java.util.Map;
 
 import javax.json.JsonObject;
 
-import org.talend.components.adlsgen2.datastore.ADLSGen2Connection;
 import org.talend.sdk.component.api.service.http.ConfigurerOption;
 import org.talend.sdk.component.api.service.http.HttpClient;
 import org.talend.sdk.component.api.service.http.Path;
@@ -26,17 +25,17 @@ import org.talend.sdk.component.api.service.http.Request;
 import org.talend.sdk.component.api.service.http.Response;
 import org.talend.sdk.component.api.service.http.UseConfigurer;
 
-public interface ADLSGen2APIClient extends HttpClient {
+public interface AdlsGen2APIClient extends HttpClient {
 
     // GET http://{accountName}.{dnsSuffix}/?resource=account
 
     /**
      * @return Filesystem[]
      */
-    @UseConfigurer(ADLSGen2APIConfigurer.class)
+    @UseConfigurer(AdlsGen2APIConfigurer.class)
     @Request(path = "/")
     Response<JsonObject> filesystemList( //
-            @ConfigurerOption("connection") ADLSGen2Connection connection, //
+            @ConfigurerOption("connection") org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection, //
             @ConfigurerOption("auth") String auth, //
             @QueryParams(encode = false) Map<String, String> sas, //
             @Query("resource") String resource);
@@ -61,7 +60,7 @@ public interface ADLSGen2APIClient extends HttpClient {
      * lastModified string
      * name string
      */
-    @UseConfigurer(ADLSGen2APIConfigurer.class)
+    @UseConfigurer(AdlsGen2APIConfigurer.class)
     @Request(path = "/?resource=account")
     Response<JsonObject> filesystemList( //
             @Query("prefix") Boolean prefix, //
@@ -105,10 +104,10 @@ public interface ADLSGen2APIClient extends HttpClient {
      * owner string
      * permissions string
      */
-    @UseConfigurer(ADLSGen2APIConfigurer.class)
+    @UseConfigurer(AdlsGen2APIConfigurer.class)
     @Request(path = "/{filesystem}")
     Response<JsonObject> pathList( //
-            @ConfigurerOption("connection") ADLSGen2Connection connection, //
+            @ConfigurerOption("connection") org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection, //
             @ConfigurerOption("auth") String auth, //
             @Path("filesystem") String filesystem, //
             @QueryParams(encode = false) Map<String, String> sas, //
@@ -132,10 +131,10 @@ public interface ADLSGen2APIClient extends HttpClient {
      * @param sas
      * @return
      */
-    @UseConfigurer(ADLSGen2APIConfigurer.class)
+    @UseConfigurer(AdlsGen2APIConfigurer.class)
     @Request(path = "/{filesystem}/{path}")
     Response<JsonObject> pathRead( //
-            @ConfigurerOption("connection") ADLSGen2Connection connection, //
+            @ConfigurerOption("connection") org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection, //
             @ConfigurerOption("auth") String auth, //
             @Path("filesystem") String filesystem, //
             @Path("path") String path, //
@@ -143,10 +142,10 @@ public interface ADLSGen2APIClient extends HttpClient {
             @QueryParams(encode = false) Map<String, String> sas //
     );
 
-    @UseConfigurer(ADLSGen2APIConfigurer.class)
+    @UseConfigurer(AdlsGen2APIConfigurer.class)
     @Request(path = "/{filesystem}/{path}", method = "HEAD")
     Response<JsonObject> pathGetProperties( //
-            @ConfigurerOption("connection") ADLSGen2Connection connection, //
+            @ConfigurerOption("connection") org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection, //
             @ConfigurerOption("auth") String auth, //
             @Path("filesystem") String filesystem, //
             @Path("path") String path, //
@@ -154,10 +153,10 @@ public interface ADLSGen2APIClient extends HttpClient {
     );
 
     // PUT http://{accountName}.{dnsSuffix}/{filesystem}/{path}
-    @UseConfigurer(ADLSGen2APIConfigurer.class)
+    @UseConfigurer(AdlsGen2APIConfigurer.class)
     @Request(path = "/{filesystem}/{path}", method = "PUT")
     Response<JsonObject> pathCreate( //
-            @ConfigurerOption("connection") ADLSGen2Connection connection, //
+            @ConfigurerOption("connection") org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection, //
             @ConfigurerOption("auth") String auth, //
             @Path("filesystem") String filesystem, //
             @Path("path") String path, //
@@ -180,15 +179,15 @@ public interface ADLSGen2APIClient extends HttpClient {
      * @param content File content
      * @return
      */
-    @UseConfigurer(ADLSGen2APIConfigurer.class)
+    @UseConfigurer(AdlsGen2APIConfigurer.class)
     @Request(path = "/{filesystem}/{path}", method = "PATCH")
     Response<JsonObject> pathUpdate( //
-            @ConfigurerOption("connection") ADLSGen2Connection connection, //
+            @ConfigurerOption("connection") org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection, //
             @ConfigurerOption("auth") String auth, //
             @Path("filesystem") String filesystem, //
             @Path("path") String path, //
             @Query("action") String action, //
-            @Query("position") int position, //
+            @Query("position") long position, //
             @QueryParams(encode = false) Map<String, String> sas, //
             String content //
     );

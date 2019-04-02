@@ -10,7 +10,7 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-@Components(family = "ADLSGen2", categories = "Cloud")
+@Components(family = "AdlsGen2", categories = "Cloud")
 @Icon(IconType.FILE_HDFS_O)
 
 package org.talend.components.adlsgen2;

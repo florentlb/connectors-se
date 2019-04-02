@@ -35,8 +35,6 @@ import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 
-import org.talend.components.adlsgen2.dataset.ADLSGen2DataSet;
-import org.talend.components.adlsgen2.datastore.ADLSGen2Connection;
 import org.talend.components.adlsgen2.datastore.Constants;
 import org.talend.components.adlsgen2.datastore.Constants.HeaderConstants;
 import org.talend.components.adlsgen2.datastore.SharedKeyUtils;
@@ -57,7 +55,10 @@ import com.microsoft.rest.v2.http.HttpRequest;
 
 @Slf4j
 @Service
-public class ADLSGen2Service implements Serializable {
+public class AdlsGen2Service implements Serializable {
+
+    private static final Set<Integer> successfulOperations = new HashSet<>(Arrays.asList(Constants.HTTP_RESPONSE_CODE_200_OK,
+            Constants.HTTP_RESPONSE_CODE_201_CREATED, Constants.HTTP_RESPONSE_CODE_202_ACCEPTED));
 
     // reflexion hack to support PATCH method.
     static {
@@ -72,7 +73,7 @@ public class ADLSGen2Service implements Serializable {
     RecordBuilderFactory recordBuilder;
 
     @Service
-    ADLSGen2APIClient client;
+    AdlsGen2APIClient client;
 
     @Service
     AccessTokenProvider accessTokenProvider;
@@ -83,16 +84,15 @@ public class ADLSGen2Service implements Serializable {
 
     private transient Map<String, String> sasMap;
 
-    private static final Set<Integer> successfulOperations = new HashSet<>(Arrays.asList(Constants.HTTP_RESPONSE_CODE_200_OK,
-            Constants.HTTP_RESPONSE_CODE_201_CREATED, Constants.HTTP_RESPONSE_CODE_202_ACCEPTED));
-
-    public ADLSGen2APIClient getClient(@Configuration("connection") final ADLSGen2Connection connection) {
+    public AdlsGen2APIClient getClient(
+            @Configuration("connection") final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
         log.warn("[getClient] setting base url {}", connection.apiUrl());
         client.base(connection.apiUrl());
         return client;
     }
 
-    public void preprareRequest(@Configuration("connection") final ADLSGen2Connection connection) {
+    public void preprareRequest(
+            @Configuration("connection") final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
         client.base(connection.apiUrl());
         auth = "";
         switch (connection.getAuthMethod()) {
@@ -149,7 +149,8 @@ public class ADLSGen2Service implements Serializable {
         }
     }
 
-    public List<Record> extractCSVRecords(@Configuration("dataSet") final ADLSGen2DataSet dataSet, String content) {
+    public List<Record> extractCSVRecords(
+            @Configuration("dataSet") final org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet, String content) {
         List<Record> records = new ArrayList<>();
         char delimiter = dataSet.getFieldDelimiter().getDelimiterChar();
         CsvReader csvReader = new CsvReader(new StringReader(content), delimiter);
@@ -179,7 +180,8 @@ public class ADLSGen2Service implements Serializable {
         return records;
     }
 
-    public List<Record> convertToRecordList(@Configuration("dataSet") final ADLSGen2DataSet dataSet, Object content) {
+    public List<Record> convertToRecordList(
+            @Configuration("dataSet") final org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet, Object content) {
         log.warn("[convertToRecordList] type: {}", content.getClass().getName());
         switch (dataSet.getFormat()) {
         case CSV:
@@ -192,14 +194,16 @@ public class ADLSGen2Service implements Serializable {
         return null;
     }
 
-    public String getAccessToken(@Configuration("connection") final ADLSGen2Connection connection) {
+    public String getAccessToken(
+            @Configuration("connection") final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
         accessTokenProvider.base(connection.oauthUrl());
         String payload = String.format(Constants.TOKEN_FORM, connection.getClientId(), connection.getClientSecret());
         Response<JsonObject> token = handleResponse(accessTokenProvider.getAccessToken(connection.getTenantId(), payload));
         return token.body().getString(Constants.ATTR_ACCESS_TOKEN);
     }
 
-    public List<String> filesystemList(@Configuration("connection") final ADLSGen2Connection connection) {
+    public List<String> filesystemList(
+            @Configuration("connection") final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
         preprareRequest(connection);
         Response<JsonObject> result = handleResponse(client.filesystemList(connection, auth, sasMap, Constants.ATTR_ACCOUNT));
         List<String> fs = new ArrayList<>();
@@ -243,7 +247,8 @@ public class ADLSGen2Service implements Serializable {
         return Paths.get(blobPath).getFileName().toString();
     }
 
-    public Map<String, String> pathGetProperties(@Configuration("dataSet") final ADLSGen2DataSet dataSet) {
+    public Map<String, String> pathGetProperties(
+            @Configuration("dataSet") final org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet) {
         preprareRequest(dataSet.getConnection());
         Map<String, String> properties = new HashMap<>();
         Response<JsonObject> result = handleResponse(client.pathGetProperties( //
@@ -264,34 +269,8 @@ public class ADLSGen2Service implements Serializable {
         return properties;
     }
 
-    @Data
-    @ToString
-    class BlobInformations {
-
-        // {"contentLength":"21","etag":"Mon, 25 Mar 2019 15:35:47 GMT","group":"$superuser","lastModified":"Mon, 25 Mar 2019
-        // 15:35:47 GMT","name":"myNewFolder/customer.csv","owner":"$superuser","permissions":"rw-r-----"}
-        private Boolean exists = Boolean.FALSE;
-
-        private String path;
-
-        private String fileName;
-
-        private Integer contentLength = 0;
-
-        public String etag;
-
-        public String group;
-
-        public String lastModified;
-
-        public String name;
-
-        public String owner;
-
-        public String permissions;
-    }
-
-    public BlobInformations getBlobInformations(@Configuration("dataSet") final ADLSGen2DataSet dataSet) {
+    public BlobInformations getBlobInformations(
+            @Configuration("dataSet") final org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet) {
         preprareRequest(dataSet.getConnection());
         BlobInformations infos = new BlobInformations();
         Response<JsonObject> result = client.pathList( //
@@ -331,8 +310,8 @@ public class ADLSGen2Service implements Serializable {
         return infos;
     }
 
-    public Boolean pathExists(@Configuration("dataSet") final ADLSGen2DataSet dataSet) {
-        return getBlobInformations(dataSet).getExists();
+    public Boolean pathExists(@Configuration("dataSet") final org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet) {
+        return getBlobInformations(dataSet).isExists();
     }
 
     public List<Record> pathRead(@Configuration("configuration") final InputConfiguration configuration) {
@@ -364,16 +343,8 @@ public class ADLSGen2Service implements Serializable {
     }
 
     public Response<JsonObject> pathUpdate(@Configuration("configuration") final OutputConfiguration configuration,
-            String content) {
+            String content, long position) {
         preprareRequest(configuration.getDataSet().getConnection());
-        BlobInformations blob = getBlobInformations(configuration.getDataSet());
-        int position = blob.getContentLength();
-        log.warn("[pathUpdate]blob: {}.", blob);
-        if (configuration.isOverwrite() || !blob.getExists()) {
-            pathCreate(configuration);
-            position = 0;
-        }
-
         Response<JsonObject> result = handleResponse(client.pathUpdate( //
                 configuration.getDataSet().getConnection(), //
                 auth, //
@@ -384,15 +355,22 @@ public class ADLSGen2Service implements Serializable {
                 sasMap, //
                 content //
         ));
+        log.warn("[pathUpdate] [{}] {}", result.status(), result.headers());
 
-        log.warn("[pathUpdate::update] [{}] {}", result.status(), result.headers());
+        return result;
+    }
 
-        position += content.length();
-        /*
-         * To flush, the previously uploaded data must be contiguous, the position parameter must be specified and equal to the
-         * length of the file after all data has been written, and there must not be a request entity body included with the
-         * request.
-         */
+    /**
+     * To flush, the previously uploaded data must be contiguous, the position parameter must be specified and equal to the
+     * length of the file after all data has been written, and there must not be a request entity body included with the
+     * request.
+     *
+     * @param configuration
+     * @param position
+     * @return
+     */
+    public Response<JsonObject> flushBlob(@Configuration("configuration") OutputConfiguration configuration, long position) {
+        Response<JsonObject> result;
         result = handleResponse(client.pathUpdate( //
                 configuration.getDataSet().getConnection(), //
                 auth, //
@@ -403,9 +381,38 @@ public class ADLSGen2Service implements Serializable {
                 sasMap, //
                 "" //
         ));
-
-        log.warn("[pathUpdate::flush] [{}] {}", result.status(), result.headers());
+        log.warn("[flushBlob] [{}] {}", result.status(), result.headers());
 
         return result;
+    }
+
+    /*
+     *
+     */
+    @Data
+    @ToString
+    public class BlobInformations {
+
+        // {"contentLength":"21","etag":"Mon, 25 Mar 2019 15:35:47 GMT","group":"$superuser","lastModified":"Mon, 25 Mar 2019
+        // 15:35:47 GMT","name":"myNewFolder/customer.csv","owner":"$superuser","permissions":"rw-r-----"}
+        public String etag;
+
+        public String group;
+
+        public String lastModified;
+
+        public String name;
+
+        public String owner;
+
+        public String permissions;
+
+        private boolean exists = Boolean.FALSE;
+
+        private String path;
+
+        private String fileName;
+
+        private Integer contentLength = 0;
     }
 }

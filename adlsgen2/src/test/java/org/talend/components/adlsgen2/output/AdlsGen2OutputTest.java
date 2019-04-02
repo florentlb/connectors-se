@@ -18,7 +18,6 @@ import static org.talend.sdk.component.junit.SimpleFactory.configurationByExampl
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.talend.components.adlsgen2.ADLSGen2TestBase;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.configuration.LocalConfiguration;
@@ -29,7 +28,7 @@ import org.talend.sdk.component.runtime.manager.chain.Job;
 
 @HttpApi(useSsl = true, responseLocator = AzureStorageCredentialsRemovalResponseLocator.class)
 @WithComponents("org.talend.components.adlsgen2")
-class ADLSGen2OutputTest extends ADLSGen2TestBase {
+class AdlsGen2OutputTest extends org.talend.components.adlsgen2.AdlsGen2TestBase {
 
     @Service
     private LocalConfiguration configuration;
@@ -42,7 +41,7 @@ class ADLSGen2OutputTest extends ADLSGen2TestBase {
         final String config = configurationByExample().forInstance(outputConfiguration).configured().toQueryString();
         Job.components() //
                 .component("emitter", "test://emitter") //
-                .component("out", "adlsgen2://ADLSGen2Output?" + config) //
+                .component("out", "AdlsGen2://AdlsGen2Output?" + config) //
                 .connections() //
                 .from("emitter") //
                 .to("out") //

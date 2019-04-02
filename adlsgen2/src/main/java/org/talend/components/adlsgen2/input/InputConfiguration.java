@@ -12,19 +12,20 @@
 // ============================================================================
 package org.talend.components.adlsgen2.input;
 
-import org.talend.components.adlsgen2.dataset.ADLSGen2DataSet;
+import lombok.Data;
+
+import java.io.Serializable;
+
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
 
-import lombok.Data;
-
 @Data
 @GridLayout(value = { @GridLayout.Row({ "dataSet" }) })
 @Documentation("ADLS input configuration")
-public class InputConfiguration {
+public class InputConfiguration implements Serializable {
 
     @Option
     @Documentation("Dataset")
-    private ADLSGen2DataSet dataSet;
+    private org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet;
 }
