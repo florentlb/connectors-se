@@ -12,6 +12,9 @@
 // ============================================================================
 package org.talend.components.adlsgen2.datastore;
 
+import lombok.Data;
+import lombok.ToString;
+
 import static org.talend.components.adlsgen2.service.UIActionService.ACTION_HEALTHCHECK;
 
 import java.io.Serializable;
@@ -23,9 +26,6 @@ import org.talend.sdk.component.api.configuration.constraint.Required;
 import org.talend.sdk.component.api.configuration.type.DataStore;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
-
-import lombok.Data;
-import lombok.ToString;
 
 @Data
 @ToString
@@ -39,7 +39,7 @@ import lombok.ToString;
         @GridLayout.Row({ "clientId", "clientSecret" }), //
         @GridLayout.Row("sas"), //
 })
-@Documentation("The datastore to connect salesforce")
+@Documentation("The datastore to connect Azure Data Lake Storage Gen2")
 public class ADLSGen2Connection implements Serializable {
 
     @Option

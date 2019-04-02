@@ -14,6 +14,18 @@ package org.talend.components.jdbc.configuration;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+
+import static org.talend.components.jdbc.service.UIActionService.ACTION_SUGGESTION_ACTION_ON_DATA;
+import static org.talend.components.jdbc.service.UIActionService.ACTION_SUGGESTION_TABLE_COLUMNS_NAMES;
+import static org.talend.sdk.component.api.configuration.condition.ActiveIf.EvaluationStrategy.CONTAINS;
+import static org.talend.sdk.component.api.configuration.condition.ActiveIfs.Operator.AND;
+import static org.talend.sdk.component.api.configuration.condition.ActiveIfs.Operator.OR;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+
 import org.talend.components.jdbc.dataset.TableNameDataset;
 import org.talend.components.jdbc.service.I18nMessage;
 import org.talend.sdk.component.api.configuration.Option;
@@ -23,17 +35,6 @@ import org.talend.sdk.component.api.configuration.condition.ActiveIfs;
 import org.talend.sdk.component.api.configuration.constraint.Required;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-
-import static org.talend.components.jdbc.service.UIActionService.ACTION_SUGGESTION_ACTION_ON_DATA;
-import static org.talend.components.jdbc.service.UIActionService.ACTION_SUGGESTION_TABLE_COLUMNS_NAMES;
-import static org.talend.sdk.component.api.configuration.condition.ActiveIf.EvaluationStrategy.CONTAINS;
-import static org.talend.sdk.component.api.configuration.condition.ActiveIfs.Operator.AND;
-import static org.talend.sdk.component.api.configuration.condition.ActiveIfs.Operator.OR;
 
 @Data
 @GridLayout(value = { @GridLayout.Row("dataset"), @GridLayout.Row({ "actionOnData" }), @GridLayout.Row("createTableIfNotExists"),
@@ -53,7 +54,7 @@ public class OutputConfig implements Serializable {
     @Required
     @Suggestable(value = ACTION_SUGGESTION_ACTION_ON_DATA, parameters = { "../dataset" })
     @Documentation("The action on data to be performed")
-    private String actionOnData;
+    private String actionOnData = "INSERT";
 
     @Option
     @Required
@@ -69,7 +70,8 @@ public class OutputConfig implements Serializable {
     private int varcharLength = -1;
 
     @Option
-    @ActiveIf(target = "../createTableIfNotExists", value = { "true" })
+    @ActiveIfs(operator = OR, value = { @ActiveIf(target = "../createTableIfNotExists", value = { "true" }),
+            @ActiveIf(target = "../actionOnData", value = { "INSERT", "BULK_LOAD" }, negate = true) })
     @Suggestable(value = ACTION_SUGGESTION_TABLE_COLUMNS_NAMES, parameters = { "dataset" })
     @Documentation("List of columns to be used as keys for this operation")
     private List<String> keys = new ArrayList<>();

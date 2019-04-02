@@ -34,9 +34,9 @@ import org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus;
 @Service
 public class UIActionService implements Serializable {
 
-    public static final String ACTION_HEALTHCHECK = "HEALTHCHECK";
+    public static final String ACTION_HEALTHCHECK = "ACTION_HEALTHCHECK";
 
-    public static final String ACTION_FILESYSTEMS = "FILESYSTEMS";
+    public static final String ACTION_FILESYSTEMS = "ACTION_FILESYSTEMS";
 
     @Service
     private ADLSGen2Service service;
