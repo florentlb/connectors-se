@@ -12,10 +12,6 @@
 // ============================================================================
 package org.talend.components.adlsgen2.dataset;
 
-import lombok.Data;
-
-import static org.talend.components.adlsgen2.service.UIActionService.ACTION_FILESYSTEMS;
-
 import java.io.Serializable;
 
 import org.talend.components.adlsgen2.service.CSVFormat;
@@ -27,6 +23,10 @@ import org.talend.sdk.component.api.configuration.type.DataSet;
 import org.talend.sdk.component.api.configuration.ui.DefaultValue;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
+
+import lombok.Data;
+
+import static org.talend.components.adlsgen2.service.UIActionService.ACTION_FILESYSTEMS;
 
 @Data
 @DataSet("AdlsGen2DataSet")

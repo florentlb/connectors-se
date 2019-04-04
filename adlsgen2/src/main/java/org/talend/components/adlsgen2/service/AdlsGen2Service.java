@@ -12,10 +12,6 @@
 // ============================================================================
 package org.talend.components.adlsgen2.service;
 
-import lombok.Data;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
@@ -30,11 +26,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.json.JsonArray;
 import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 
+import org.talend.components.adlsgen2.datastore.AdlsGen2Connection;
 import org.talend.components.adlsgen2.datastore.Constants;
 import org.talend.components.adlsgen2.datastore.Constants.HeaderConstants;
 import org.talend.components.adlsgen2.datastore.SharedKeyUtils;
@@ -52,6 +50,10 @@ import com.google.common.base.Splitter;
 import com.microsoft.rest.v2.http.HttpHeaders;
 import com.microsoft.rest.v2.http.HttpMethod;
 import com.microsoft.rest.v2.http.HttpRequest;
+
+import lombok.Data;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -84,15 +86,13 @@ public class AdlsGen2Service implements Serializable {
 
     private transient Map<String, String> sasMap;
 
-    public AdlsGen2APIClient getClient(
-            @Configuration("connection") final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
+    public AdlsGen2APIClient getClient(@Configuration("connection") final AdlsGen2Connection connection) {
         log.warn("[getClient] setting base url {}", connection.apiUrl());
         client.base(connection.apiUrl());
         return client;
     }
 
-    public void preprareRequest(
-            @Configuration("connection") final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
+    public void preprareRequest(@Configuration("connection") final AdlsGen2Connection connection) {
         client.base(connection.apiUrl());
         auth = "";
         switch (connection.getAuthMethod()) {
@@ -194,16 +194,14 @@ public class AdlsGen2Service implements Serializable {
         return null;
     }
 
-    public String getAccessToken(
-            @Configuration("connection") final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
+    public String getAccessToken(@Configuration("connection") final AdlsGen2Connection connection) {
         accessTokenProvider.base(connection.oauthUrl());
         String payload = String.format(Constants.TOKEN_FORM, connection.getClientId(), connection.getClientSecret());
         Response<JsonObject> token = handleResponse(accessTokenProvider.getAccessToken(connection.getTenantId(), payload));
         return token.body().getString(Constants.ATTR_ACCESS_TOKEN);
     }
 
-    public List<String> filesystemList(
-            @Configuration("connection") final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
+    public List<String> filesystemList(@Configuration("connection") final AdlsGen2Connection connection) {
         preprareRequest(connection);
         Response<JsonObject> result = handleResponse(client.filesystemList(connection, auth, sasMap, Constants.ATTR_ACCOUNT));
         List<String> fs = new ArrayList<>();

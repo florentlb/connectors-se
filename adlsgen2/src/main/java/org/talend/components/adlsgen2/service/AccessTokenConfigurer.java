@@ -12,10 +12,10 @@
 // ============================================================================
 package org.talend.components.adlsgen2.service;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.talend.components.adlsgen2.datastore.Constants.HeaderConstants;
 import org.talend.sdk.component.api.service.http.Configurer;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AccessTokenConfigurer implements Configurer {
