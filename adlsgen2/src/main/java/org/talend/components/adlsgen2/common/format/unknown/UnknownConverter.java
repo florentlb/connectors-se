@@ -10,25 +10,30 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-package org.talend.components.adlsgen2.commons.formats.csv;
+package org.talend.components.adlsgen2.common.format.unknown;
 
-import org.talend.components.adlsgen2.commons.converter.RecordConverter;
+import org.talend.components.adlsgen2.common.converter.RecordConverter;
 import org.talend.sdk.component.api.record.Record;
+import org.talend.sdk.component.api.service.Service;
+import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 
-public class CsvConverter implements RecordConverter<String> {
+public class UnknownConverter implements RecordConverter<String> {
 
-    private static final CsvConverter INSTANCE = new CsvConverter();
+    @Service
+    RecordBuilderFactory recordBuilder;
 
-    private CsvConverter() {
+    private static final UnknownConverter INSTANCE = new UnknownConverter();
+
+    private UnknownConverter() {
     }
 
-    public static CsvConverter of() {
+    public static UnknownConverter of() {
         return INSTANCE;
     }
 
     @Override
     public Record toRecord(String value) {
-        throw new UnsupportedOperationException("#toRecord()");
+        return recordBuilder.newRecordBuilder().withString("content", value).build();
     }
 
     @Override

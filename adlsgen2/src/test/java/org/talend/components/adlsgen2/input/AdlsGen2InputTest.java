@@ -12,20 +12,22 @@
 // ============================================================================
 package org.talend.components.adlsgen2.input;
 
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.talend.components.adlsgen2.AdlsGen2TestBase;
+import org.talend.sdk.component.api.record.Record;
+import org.talend.sdk.component.junit.http.internal.impl.AzureStorageCredentialsRemovalResponseLocator;
+import org.talend.sdk.component.junit5.WithComponents;
+import org.talend.sdk.component.runtime.manager.chain.Job;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.talend.sdk.component.junit.SimpleFactory.configurationByExample;
 
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-import org.talend.sdk.component.api.record.Record;
-import org.talend.sdk.component.junit5.WithComponents;
-import org.talend.sdk.component.runtime.manager.chain.Job;
-
-@org.talend.sdk.component.junit.http.junit5.HttpApi(useSsl = true, responseLocator = org.talend.sdk.component.junit.http.internal.impl.AzureStorageCredentialsRemovalResponseLocator.class)
+@org.talend.sdk.component.junit.http.junit5.HttpApi(useSsl = true, responseLocator = AzureStorageCredentialsRemovalResponseLocator.class)
 @WithComponents("org.talend.components.adlsgen2")
-class AdlsGen2InputTest extends org.talend.components.adlsgen2.AdlsGen2TestBase {
+class AdlsGen2InputTest extends AdlsGen2TestBase {
 
     @Test
     public void produce() {

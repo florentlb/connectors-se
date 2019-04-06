@@ -10,13 +10,13 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-package org.talend.components.adlsgen2.commons.converter;
+package org.talend.components.adlsgen2.common.converter;
 
-import org.talend.sdk.component.api.record.Record;
+import javax.json.JsonObject;
 
-public interface RecordConverter<T> {
+public interface JsonConverter<T> {
 
-    Record toRecord(T value);
+    JsonObject toJson(T value);
 
-    T fromRecord(Record record);
+    T fromJson(JsonObject record);
 }

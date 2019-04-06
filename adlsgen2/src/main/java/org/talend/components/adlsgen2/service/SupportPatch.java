@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -25,8 +24,8 @@ public class SupportPatch {
 
     public static void main(String... args) throws IOException {
         // allowMethods("PATCH");
-        HttpURLConnection conn = (HttpURLConnection) new URL("http://example.com").openConnection();
-        conn.setRequestMethod("PATCH");
+        // HttpURLConnection conn = (HttpURLConnection) new URL("http://example.com").openConnection();
+        // conn.setRequestMethod("PATCH");
     }
 
     public static void allowMethods(String... methods) {

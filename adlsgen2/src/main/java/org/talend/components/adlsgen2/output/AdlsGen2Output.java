@@ -12,16 +12,18 @@
 // ============================================================================
 package org.talend.components.adlsgen2.output;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.talend.components.adlsgen2.service.AdlsGen2Service;
 import org.talend.components.adlsgen2.service.AdlsGen2Service.BlobInformations;
 import org.talend.components.adlsgen2.service.I18n;
 import org.talend.sdk.component.api.component.Icon;
@@ -34,7 +36,7 @@ import org.talend.sdk.component.api.processor.Processor;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.record.Schema;
 
-import com.csvreader.CsvWriter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Version(1)
@@ -43,7 +45,7 @@ import com.csvreader.CsvWriter;
 @Documentation("Azure Data Lake Storage Gen2 Output")
 public class AdlsGen2Output implements Serializable {
 
-    private final org.talend.components.adlsgen2.service.AdlsGen2Service service;
+    private final AdlsGen2Service service;
 
     private final I18n i18n;
 
@@ -55,13 +57,15 @@ public class AdlsGen2Output implements Serializable {
 
     private transient long position = 0;
 
-    public AdlsGen2Output(@Option("configuration") final OutputConfiguration configuration,
-            final org.talend.components.adlsgen2.service.AdlsGen2Service service, final I18n i18n) {
+    private List<Record> records;
+
+    public AdlsGen2Output(@Option("configuration") final OutputConfiguration configuration, final AdlsGen2Service service,
+            final I18n i18n) {
         this.configuration = configuration;
         this.service = service;
         this.i18n = i18n;
-        fieldDelimiter = configuration.getDataSet().getFieldDelimiter().getDelimiterChar();
-        recordDelimiter = configuration.getDataSet().getRecordDelimiter().getDelimiterChar();
+        fieldDelimiter = configuration.getDataSet().getCsvConfiguration().getFieldDelimiter().getDelimiterChar();
+        recordDelimiter = configuration.getDataSet().getCsvConfiguration().getRecordDelimiter().getSeparatorChar();
     }
 
     @PostConstruct
@@ -93,10 +97,12 @@ public class AdlsGen2Output implements Serializable {
 
     private String toCsvFormat(final Record record) {
         StringWriter writer = new StringWriter();
-        CsvWriter csvWriter = new CsvWriter(writer, fieldDelimiter);
-        csvWriter.setRecordDelimiter(recordDelimiter);
+
+        CSVFormat csv = CSVFormat.DEFAULT.withRecordSeparator(recordDelimiter).withDelimiter(fieldDelimiter);
         try {
-            csvWriter.writeRecord(getStringArrayFromRecord(record));
+            CSVPrinter printer = new CSVPrinter(writer, csv);
+
+            printer.printRecord(getStringArrayFromRecord(record));
             log.warn("[toCsvFormat] return content: {}", writer.toString());
             return writer.toString();
         } catch (IOException e) {
@@ -111,6 +117,10 @@ public class AdlsGen2Output implements Serializable {
         switch (configuration.getDataSet().getFormat()) {
         case CSV:
             content = toCsvFormat(record);
+            break;
+        case UNKNOWN:
+            //
+            content = record.toString();
             break;
         case AVRO:
         case JSON:

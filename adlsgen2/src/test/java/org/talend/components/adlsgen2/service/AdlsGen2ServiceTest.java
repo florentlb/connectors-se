@@ -12,6 +12,18 @@
 // ============================================================================
 package org.talend.components.adlsgen2.service;
 
+import java.util.Iterator;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.talend.components.adlsgen2.AdlsGen2TestBase;
+import org.talend.components.adlsgen2.common.format.FileFormat;
+import org.talend.sdk.component.api.record.Record;
+import org.talend.sdk.component.api.service.Service;
+import org.talend.sdk.component.junit.http.internal.impl.AzureStorageCredentialsRemovalResponseLocator;
+import org.talend.sdk.component.junit.http.junit5.HttpApi;
+import org.talend.sdk.component.junit5.WithComponents;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,18 +32,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-import org.talend.sdk.component.api.service.Service;
-import org.talend.sdk.component.junit.http.internal.impl.AzureStorageCredentialsRemovalResponseLocator;
-import org.talend.sdk.component.junit.http.junit5.HttpApi;
-import org.talend.sdk.component.junit5.WithComponents;
-
 @Slf4j
 @HttpApi(useSsl = true, responseLocator = AzureStorageCredentialsRemovalResponseLocator.class)
 @WithComponents("org.talend.components.adlsgen2")
-class AdlsGen2ServiceTest extends org.talend.components.adlsgen2.AdlsGen2TestBase {
+class AdlsGen2ServiceTest extends AdlsGen2TestBase {
 
     @Service
     AdlsGen2Service service;
@@ -127,11 +131,16 @@ class AdlsGen2ServiceTest extends org.talend.components.adlsgen2.AdlsGen2TestBas
     }
 
     @Test
-    void pathReadSmallFile() {
+    void pathReadUnknownFile() {
         String path = "myNewFolder/nostorelookup.java";
         inputConfiguration.getDataSet().setBlobPath(path);
-        Object result = service.pathRead(inputConfiguration);
-        log.warn("[pathList] {}", result);
+        inputConfiguration.getDataSet().setFormat(FileFormat.UNKNOWN);
+        Iterator<Record> result = service.pathRead(inputConfiguration);
+        while (result.hasNext()) {
+            Record r = result.next();
+            assertNotNull(r);
+            log.info("{}", r);
+        }
     }
 
     @Test
@@ -139,7 +148,14 @@ class AdlsGen2ServiceTest extends org.talend.components.adlsgen2.AdlsGen2TestBas
         // String path = "myNewFolder/customer.csv";
         String path = "myNewFolder/customer_20190325.csv";
         inputConfiguration.getDataSet().setBlobPath(path);
-        Object result = service.pathRead(inputConfiguration);
+        Iterator<Record> result = service.pathRead(inputConfiguration);
+        int count = 0;
+        while (result.hasNext()) {
+            Record r = result.next();
+            assertNotNull(r);
+            count++;
+        }
+        assertEquals(10000, count);
     }
 
     @Test

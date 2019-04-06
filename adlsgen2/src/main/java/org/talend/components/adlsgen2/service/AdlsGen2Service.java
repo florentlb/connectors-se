@@ -12,9 +12,8 @@
 // ============================================================================
 package org.talend.components.adlsgen2.service;
 
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
-import java.io.StringReader;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +32,9 @@ import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 
+import org.talend.components.adlsgen2.common.format.csv.CsvIterator;
+import org.talend.components.adlsgen2.common.format.unknown.UnknownIterator;
+import org.talend.components.adlsgen2.dataset.AdlsGen2DataSet;
 import org.talend.components.adlsgen2.datastore.AdlsGen2Connection;
 import org.talend.components.adlsgen2.datastore.Constants;
 import org.talend.components.adlsgen2.datastore.Constants.HeaderConstants;
@@ -39,13 +42,11 @@ import org.talend.components.adlsgen2.datastore.SharedKeyUtils;
 import org.talend.components.adlsgen2.input.InputConfiguration;
 import org.talend.components.adlsgen2.output.OutputConfiguration;
 import org.talend.sdk.component.api.record.Record;
-import org.talend.sdk.component.api.record.Record.Builder;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.configuration.Configuration;
 import org.talend.sdk.component.api.service.http.Response;
 import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 
-import com.csvreader.CsvReader;
 import com.google.common.base.Splitter;
 import com.microsoft.rest.v2.http.HttpHeaders;
 import com.microsoft.rest.v2.http.HttpMethod;
@@ -128,68 +129,42 @@ public class AdlsGen2Service implements Serializable {
         }
     }
 
-    public Response<JsonObject> handleResponse(Response<JsonObject> response) {
+    private RuntimeException handleError(int status, Map<String, List<String>> headers) {
+        StringBuilder sb = new StringBuilder("[" + status + "] ");
+        List<String> errors = headers.get(HeaderConstants.HEADER_X_MS_ERROR_CODE);
+        if (errors != null && errors.size() > 0) {
+            for (String error : errors) {
+                sb.append(error);
+                if (ApiErrors.valueOf(error) != null) {
+                    sb.append(": " + ApiErrors.valueOf(error));
+                }
+                sb.append("\n");
+            }
+        }
+        log.error("[handleResponse] {}", sb.toString());
+        return new RuntimeException(sb.toString());
+    }
+
+    public Response handleResponse(Response response) {
         log.info("[handleResponse] response:[{}] {}.", response.status(), response.headers());
         if (successfulOperations.contains(response.status())) {
             return response;
         } else {
-            StringBuilder sb = new StringBuilder("[" + response.status() + "] ");
-            List<String> errors = response.headers().get(HeaderConstants.HEADER_X_MS_ERROR_CODE);
-            if (errors != null && errors.size() > 0) {
-                for (String error : errors) {
-                    sb.append(error);
-                    if (ApiErrors.valueOf(error) != null) {
-                        sb.append(": " + ApiErrors.valueOf(error));
-                    }
-                    sb.append("\n");
-                }
-            }
-            log.error("[handleResponse] {}", sb.toString());
-            throw new RuntimeException(sb.toString());
+            throw handleError(response.status(), response.headers());
         }
     }
 
-    public List<Record> extractCSVRecords(
-            @Configuration("dataSet") final org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet, String content) {
-        List<Record> records = new ArrayList<>();
-        char delimiter = dataSet.getFieldDelimiter().getDelimiterChar();
-        CsvReader csvReader = new CsvReader(new StringReader(content), delimiter);
-        String[] columns = dataSet.getCsvSchema().split(dataSet.getFieldDelimiter().getDelimiter());
-        log.debug("[extractCSVRecords][{}] cols: {}", delimiter, columns);
-        Builder record;
-        try {
-            if (dataSet.isHeader()) {
-                csvReader.readHeaders();
-            } else {
-                csvReader.setHeaders(columns);
-            }
-            while (csvReader.readRecord()) {
-                record = recordBuilder.newRecordBuilder();
-                for (String column : columns) {
-                    try {
-                        record.withString(column, csvReader.get(column));
-                    } catch (IOException e) {
-                        throw new IllegalStateException(e);
-                    }
-                }
-                records.add(record.build());
-            }
-        } catch (IOException e) {
-        }
-        log.warn("[extractCSVRecords] record count: {}. sample: {}.", records.size(), records.get(10));
-        return records;
-    }
-
-    public List<Record> convertToRecordList(
-            @Configuration("dataSet") final org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet, Object content) {
+    public Iterator<Record> convertToRecordList(@Configuration("dataSet") final AdlsGen2DataSet dataSet, InputStream content) {
         log.warn("[convertToRecordList] type: {}", content.getClass().getName());
         switch (dataSet.getFormat()) {
         case CSV:
-            return extractCSVRecords(dataSet, (String) content);
+            return CsvIterator.Builder.of().withConfiguration(dataSet.getCsvConfiguration()).parse(content);
         case AVRO:
         case JSON:
         case PARQUET:
             throw new IllegalArgumentException("Not implemented");
+        case UNKNOWN:
+            return UnknownIterator.Builder.of().withConfiguration(dataSet.getUnknownConfiguration()).parse(content);
         }
         return null;
     }
@@ -245,8 +220,7 @@ public class AdlsGen2Service implements Serializable {
         return Paths.get(blobPath).getFileName().toString();
     }
 
-    public Map<String, String> pathGetProperties(
-            @Configuration("dataSet") final org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet) {
+    public Map<String, String> pathGetProperties(@Configuration("dataSet") final AdlsGen2DataSet dataSet) {
         preprareRequest(dataSet.getConnection());
         Map<String, String> properties = new HashMap<>();
         Response<JsonObject> result = handleResponse(client.pathGetProperties( //
@@ -267,8 +241,7 @@ public class AdlsGen2Service implements Serializable {
         return properties;
     }
 
-    public BlobInformations getBlobInformations(
-            @Configuration("dataSet") final org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet) {
+    public BlobInformations getBlobInformations(@Configuration("dataSet") final AdlsGen2DataSet dataSet) {
         preprareRequest(dataSet.getConnection());
         BlobInformations infos = new BlobInformations();
         Response<JsonObject> result = client.pathList( //
@@ -308,13 +281,13 @@ public class AdlsGen2Service implements Serializable {
         return infos;
     }
 
-    public Boolean pathExists(@Configuration("dataSet") final org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet) {
+    public Boolean pathExists(@Configuration("dataSet") final AdlsGen2DataSet dataSet) {
         return getBlobInformations(dataSet).isExists();
     }
 
-    public List<Record> pathRead(@Configuration("configuration") final InputConfiguration configuration) {
+    public Iterator<Record> pathRead(@Configuration("configuration") final InputConfiguration configuration) {
         preprareRequest(configuration.getDataSet().getConnection());
-        Response<JsonObject> result = handleResponse(client.pathRead( //
+        Response<InputStream> result = handleResponse(client.pathRead( //
                 configuration.getDataSet().getConnection(), //
                 auth, //
                 configuration.getDataSet().getFilesystem(), //

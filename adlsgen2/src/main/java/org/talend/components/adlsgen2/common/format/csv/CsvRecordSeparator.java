@@ -10,17 +10,21 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-package org.talend.components.adlsgen2.service;
+package org.talend.components.adlsgen2.common.format.csv;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-import org.talend.sdk.component.api.service.http.Configurer;
+@Getter
+@AllArgsConstructor
+public enum CsvRecordSeparator {
+    LF("\n"),
+    CR("\r"),
+    CRLF("\r\n");
 
-@Slf4j
-public class AdlsGen2UpdateConfigurer implements Configurer {
+    private final String separator;
 
-    @Override
-    public void configure(Connection connection, ConfigurerConfiguration configuration) {
-        log.warn("[configure] [{}] URL: {}.", connection.getMethod(), connection.getUrl());
+    public char getSeparatorChar() {
+        return separator.charAt(0);
     }
 }

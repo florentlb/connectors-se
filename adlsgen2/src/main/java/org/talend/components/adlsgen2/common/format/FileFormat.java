@@ -10,11 +10,12 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-package org.talend.components.adlsgen2.commons.formats;
+package org.talend.components.adlsgen2.common.format;
 
 public enum FileFormat {
     CSV,
     AVRO,
     JSON,
-    PARQUET
+    PARQUET,
+    UNKNOWN
 }

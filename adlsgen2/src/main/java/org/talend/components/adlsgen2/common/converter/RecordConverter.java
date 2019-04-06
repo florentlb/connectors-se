@@ -10,13 +10,13 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-package org.talend.components.adlsgen2.commons.formats.csv;
+package org.talend.components.adlsgen2.common.converter;
 
-import java.io.Serializable;
+import org.talend.sdk.component.api.record.Record;
 
-import lombok.Data;
+public interface RecordConverter<T> {
 
-@Data
-public class CsvConfiguration implements Serializable {
+    Record toRecord(T value);
 
+    T fromRecord(Record record);
 }

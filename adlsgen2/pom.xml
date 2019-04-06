@@ -14,7 +14,8 @@
     <description>Azure Data Lake Storage Gen2</description>
 
     <properties>
-        <javacsv.version>2.0</javacsv.version>
+        <commons-csv.version>1.6</commons-csv.version>
+        <parquet.version>1.10.1</parquet.version>
         <hamcrest.version>1.3</hamcrest.version>
     </properties>
 
@@ -24,12 +25,22 @@
             <artifactId>azure-storage-blob</artifactId>
             <version>10.5.0</version>
         </dependency>
+        <!-- file formats -->
         <dependency>
-            <groupId>net.sourceforge.javacsv</groupId>
-            <artifactId>javacsv</artifactId>
-            <version>${javacsv.version}</version>
-            <scope>compile</scope>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>${commons-csv.version}</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.parquet</groupId>-->
+<!--            <artifactId>parquet-avro</artifactId>-->
+<!--            <version>${parquet.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.parquet</groupId>-->
+<!--            <artifactId>parquet-hadoop</artifactId>-->
+<!--            <version>${parquet.version}</version>-->
+<!--        </dependency>-->
         <!-- Testing -->
         <dependency>
             <groupId>org.hamcrest</groupId>

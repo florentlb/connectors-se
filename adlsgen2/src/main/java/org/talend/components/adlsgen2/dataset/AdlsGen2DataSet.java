@@ -14,7 +14,10 @@ package org.talend.components.adlsgen2.dataset;
 
 import java.io.Serializable;
 
-import org.talend.components.adlsgen2.service.CSVFormat;
+import org.talend.components.adlsgen2.common.format.FileFormat;
+import org.talend.components.adlsgen2.common.format.csv.CsvConfiguration;
+import org.talend.components.adlsgen2.common.format.unknown.UnknownConfiguration;
+import org.talend.components.adlsgen2.datastore.AdlsGen2Connection;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.Suggestable;
 import org.talend.sdk.component.api.configuration.condition.ActiveIf;
@@ -35,9 +38,8 @@ import static org.talend.components.adlsgen2.service.UIActionService.ACTION_FILE
         @GridLayout.Row("filesystem"), //
         @GridLayout.Row("blobPath"), //
         @GridLayout.Row("format"), //
-        @GridLayout.Row({ "recordDelimiter", "fieldDelimiter" }), //
-        @GridLayout.Row("header"), //
-        @GridLayout.Row("csvSchema"), //
+        @GridLayout.Row("csvConfiguration"), //
+        @GridLayout.Row("unknownConfiguration"), //
 })
 @Documentation("ADLS DataSet")
 public class AdlsGen2DataSet implements Serializable {
@@ -45,7 +47,7 @@ public class AdlsGen2DataSet implements Serializable {
     @Option
     @Required
     @Documentation("ADLS Gen2 Connection")
-    private org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection;
+    private AdlsGen2Connection connection;
 
     @Option
     @Required
@@ -62,38 +64,13 @@ public class AdlsGen2DataSet implements Serializable {
     @Required
     @DefaultValue("CSV")
     @Documentation("Format of Blob content")
-    private BlobFormat format;
+    private FileFormat format;
 
     @Option
-    @Required
     @ActiveIf(target = "format", value = "CSV")
-    @DefaultValue("SEMICOLON")
-    @Documentation("CSV Field Delimiter")
-    private CSVFormat.FieldDelimiter fieldDelimiter;
+    private CsvConfiguration csvConfiguration;
 
     @Option
-    @Required
-    @ActiveIf(target = "format", value = "CSV")
-    @DefaultValue("LF")
-    @Documentation("Record Delimiter")
-    private CSVFormat.RecordDelimiter recordDelimiter;
-
-    @Option
-    @Required
-    @ActiveIf(target = "format", value = "CSV")
-    @Documentation("Schema")
-    private String csvSchema;
-
-    @Option
-    @Required
-    @ActiveIf(target = "format", value = "CSV")
-    @Documentation("Has header line")
-    private boolean header;
-
-    public enum BlobFormat {
-        CSV,
-        AVRO,
-        JSON,
-        PARQUET
-    }
+    @ActiveIf(target = "format", value = "UNKNOWN")
+    private UnknownConfiguration unknownConfiguration;
 }

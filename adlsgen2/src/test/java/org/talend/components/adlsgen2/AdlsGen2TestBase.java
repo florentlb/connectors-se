@@ -12,32 +12,40 @@
 // ============================================================================
 package org.talend.components.adlsgen2;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.FileInputStream;
 import java.io.Serializable;
 import java.util.Properties;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.talend.components.adlsgen2.dataset.AdlsGen2DataSet.BlobFormat;
+import org.talend.components.adlsgen2.common.format.FileFormat;
+import org.talend.components.adlsgen2.common.format.csv.CsvConfiguration;
+import org.talend.components.adlsgen2.common.format.csv.CsvConverter;
+import org.talend.components.adlsgen2.common.format.csv.CsvFieldDelimiter;
+import org.talend.components.adlsgen2.common.format.csv.CsvRecordSeparator;
+import org.talend.components.adlsgen2.common.format.unknown.UnknownConverter;
+import org.talend.components.adlsgen2.dataset.AdlsGen2DataSet;
+import org.talend.components.adlsgen2.datastore.AdlsGen2Connection;
 import org.talend.components.adlsgen2.datastore.AdlsGen2Connection.AuthMethod;
 import org.talend.components.adlsgen2.datastore.SharedKeyUtils;
 import org.talend.components.adlsgen2.input.InputConfiguration;
 import org.talend.components.adlsgen2.output.OutputConfiguration;
-import org.talend.components.adlsgen2.service.CSVFormat.FieldDelimiter;
-import org.talend.components.adlsgen2.service.CSVFormat.RecordDelimiter;
+import org.talend.components.adlsgen2.service.AdlsGen2Service;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 import org.talend.sdk.component.junit.BaseComponentsHandler;
 import org.talend.sdk.component.junit.http.api.HttpApiHandler;
+import org.talend.sdk.component.junit.http.internal.impl.AzureStorageCredentialsRemovalResponseLocator;
 import org.talend.sdk.component.junit.http.internal.junit5.JUnit5HttpApi;
+import org.talend.sdk.component.junit.http.junit5.HttpApi;
 import org.talend.sdk.component.junit.http.junit5.HttpApiInject;
 import org.talend.sdk.component.junit5.Injected;
 import org.talend.sdk.component.junit5.WithComponents;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
-@org.talend.sdk.component.junit.http.junit5.HttpApi(useSsl = true, responseLocator = org.talend.sdk.component.junit.http.internal.impl.AzureStorageCredentialsRemovalResponseLocator.class)
+@HttpApi(useSsl = true, responseLocator = AzureStorageCredentialsRemovalResponseLocator.class)
 @WithComponents("org.talend.components.adlsgen2")
 public class AdlsGen2TestBase implements Serializable {
 
@@ -89,13 +97,13 @@ public class AdlsGen2TestBase implements Serializable {
     protected RecordBuilderFactory recordBuilderFactory;
 
     @Service
-    protected org.talend.components.adlsgen2.service.AdlsGen2Service service;
+    protected AdlsGen2Service service;
 
     protected SharedKeyUtils utils;
 
-    protected org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection;
+    protected AdlsGen2Connection connection;
 
-    protected org.talend.components.adlsgen2.dataset.AdlsGen2DataSet dataSet;
+    protected AdlsGen2DataSet dataSet;
 
     protected InputConfiguration inputConfiguration;
 
@@ -106,9 +114,9 @@ public class AdlsGen2TestBase implements Serializable {
 
     @BeforeEach
     void setUp() {
-        service = new org.talend.components.adlsgen2.service.AdlsGen2Service();
+        service = new AdlsGen2Service();
 
-        connection = new org.talend.components.adlsgen2.datastore.AdlsGen2Connection();
+        connection = new AdlsGen2Connection();
         connection.setAuthMethod(AuthMethod.SAS);
         connection.setTenantId(tenantId);
         connection.setAccountName(accountName);
@@ -117,20 +125,29 @@ public class AdlsGen2TestBase implements Serializable {
         connection.setClientSecret(clientSecret);
         connection.setSas(sas);
 
-        dataSet = new org.talend.components.adlsgen2.dataset.AdlsGen2DataSet();
+        dataSet = new AdlsGen2DataSet();
         dataSet.setConnection(connection);
         dataSet.setFilesystem(storageFs);
         dataSet.setBlobPath("myNewFolder/customer_20190325.csv");
-        dataSet.setFormat(BlobFormat.CSV);
-        dataSet.setFieldDelimiter(FieldDelimiter.SEMICOLON);
-        dataSet.setRecordDelimiter(RecordDelimiter.LF);
-        dataSet.setCsvSchema("id;firstname;lastname;address;enrolled;zip;state");
+
+        dataSet.setFormat(FileFormat.CSV);
+        CsvConfiguration csvConfig = new CsvConfiguration();
+        csvConfig.setFieldDelimiter(CsvFieldDelimiter.SEMICOLON);
+        csvConfig.setRecordDelimiter(CsvRecordSeparator.LF);
+        csvConfig.setCsvSchema("id;firstname;lastname;address;enrolled;zip;state");
+        dataSet.setCsvConfiguration(csvConfig);
 
         inputConfiguration = new InputConfiguration();
         inputConfiguration.setDataSet(dataSet);
 
         outputConfiguration = new OutputConfiguration();
         outputConfiguration.setDataSet(dataSet);
+
+        // inject needed services
+        components.injectServices(UnknownConverter.of());
+        components.injectServices(CsvConverter.class);
+        components.injectServices(CsvConverter.of());
+        CsvConverter.recordBuilderFactory = components.findService(RecordBuilderFactory.class);
     }
 
     protected Record createData() {

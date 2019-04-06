@@ -12,27 +12,28 @@
 // ============================================================================
 package org.talend.components.adlsgen2.datastore;
 
-import lombok.extern.slf4j.Slf4j;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.net.URL;
 import java.util.HashMap;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.talend.components.adlsgen2.AdlsGen2TestBase;
 import org.talend.sdk.component.junit5.WithComponents;
 
 import com.microsoft.rest.v2.http.HttpHeaders;
 import com.microsoft.rest.v2.http.HttpMethod;
 import com.microsoft.rest.v2.http.HttpRequest;
 
+import lombok.extern.slf4j.Slf4j;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @Slf4j
 @WithComponents("org.talend.components.adlsgen2")
-class SharedKeyCredentialsUtilsTest extends org.talend.components.adlsgen2.AdlsGen2TestBase {
+class SharedKeyCredentialsUtilsTest extends AdlsGen2TestBase {
 
     private SharedKeyUtils utils;
 

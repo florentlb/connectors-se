@@ -12,13 +12,13 @@
 // ============================================================================
 package org.talend.components.adlsgen2.input;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.Serializable;
-import java.util.ListIterator;
+import java.util.Iterator;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.talend.components.adlsgen2.service.AdlsGen2Service;
 import org.talend.components.adlsgen2.service.I18n;
 import org.talend.sdk.component.api.component.Icon;
 import org.talend.sdk.component.api.component.Icon.IconType;
@@ -30,6 +30,8 @@ import org.talend.sdk.component.api.meta.Documentation;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 @Version(1)
 @Icon(value = IconType.FILE_CSV_O)
@@ -39,17 +41,16 @@ public class AdlsGen2Input implements Serializable {
 
     private InputConfiguration configuration;
 
-    private final org.talend.components.adlsgen2.service.AdlsGen2Service service;
+    private final AdlsGen2Service service;
 
     private final RecordBuilderFactory recordBuilder;
 
     private final I18n i18n;
 
-    private ListIterator<Record> records;
+    private Iterator<Record> records;
 
-    public AdlsGen2Input(@Option("configuration") final InputConfiguration configuration,
-            final org.talend.components.adlsgen2.service.AdlsGen2Service service, final RecordBuilderFactory recordBuilderFactory,
-            final I18n i18n) {
+    public AdlsGen2Input(@Option("configuration") final InputConfiguration configuration, final AdlsGen2Service service,
+            final RecordBuilderFactory recordBuilderFactory, final I18n i18n) {
         this.configuration = configuration;
         this.service = service;
         this.recordBuilder = recordBuilderFactory;
@@ -58,15 +59,12 @@ public class AdlsGen2Input implements Serializable {
 
     @PostConstruct
     public void init() {
-        records = service.pathRead(configuration).listIterator();
+        records = service.pathRead(configuration);
     }
 
     @Producer
     public Record next() {
-        if (records.hasNext()) {
-            return records.next();
-        }
-        return null;
+        return records.next();
     }
 
     @PreDestroy

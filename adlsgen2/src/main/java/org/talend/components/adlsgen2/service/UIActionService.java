@@ -12,15 +12,11 @@
 // ============================================================================
 package org.talend.components.adlsgen2.service;
 
-import lombok.extern.slf4j.Slf4j;
-
-import static org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus.Status.KO;
-import static org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus.Status.OK;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.talend.components.adlsgen2.datastore.AdlsGen2Connection;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.completion.SuggestionValues;
@@ -28,6 +24,11 @@ import org.talend.sdk.component.api.service.completion.SuggestionValues.Item;
 import org.talend.sdk.component.api.service.completion.Suggestions;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheck;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus;
+
+import lombok.extern.slf4j.Slf4j;
+
+import static org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus.Status.KO;
+import static org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus.Status.OK;
 
 @Slf4j
 @Service
@@ -44,8 +45,7 @@ public class UIActionService implements Serializable {
     private I18n i18n;
 
     @HealthCheck(ACTION_HEALTHCHECK)
-    public HealthCheckStatus validateConnection(
-            @Option final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
+    public HealthCheckStatus validateConnection(@Option final AdlsGen2Connection connection) {
         log.info("[validateConnection] {}.", connection);
         try {
             service.filesystemList(connection);
@@ -56,7 +56,7 @@ public class UIActionService implements Serializable {
     }
 
     @Suggestions(ACTION_FILESYSTEMS)
-    public SuggestionValues filesystemList(@Option final org.talend.components.adlsgen2.datastore.AdlsGen2Connection connection) {
+    public SuggestionValues filesystemList(@Option final AdlsGen2Connection connection) {
         log.warn("[filesystemList] connection: {}", connection);
         List<Item> items = new ArrayList<>();
         for (String s : service.filesystemList(connection)) {

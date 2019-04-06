@@ -12,12 +12,10 @@
 // ============================================================================
 package org.talend.components.adlsgen2.output;
 
-import static java.util.Arrays.asList;
-import static org.talend.sdk.component.junit.SimpleFactory.configurationByExample;
-
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.talend.components.adlsgen2.AdlsGen2TestBase;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.configuration.LocalConfiguration;
@@ -26,9 +24,12 @@ import org.talend.sdk.component.junit.http.junit5.HttpApi;
 import org.talend.sdk.component.junit5.WithComponents;
 import org.talend.sdk.component.runtime.manager.chain.Job;
 
+import static java.util.Arrays.asList;
+import static org.talend.sdk.component.junit.SimpleFactory.configurationByExample;
+
 @HttpApi(useSsl = true, responseLocator = AzureStorageCredentialsRemovalResponseLocator.class)
 @WithComponents("org.talend.components.adlsgen2")
-class AdlsGen2OutputTest extends org.talend.components.adlsgen2.AdlsGen2TestBase {
+class AdlsGen2OutputTest extends AdlsGen2TestBase {
 
     @Service
     private LocalConfiguration configuration;
