@@ -70,16 +70,16 @@ public class AdlsGen2Service implements Serializable {
     }
 
     @Service
-    JsonBuilderFactory jsonFactory;
+    private JsonBuilderFactory jsonFactory;
 
     @Service
-    RecordBuilderFactory recordBuilder;
+    private RecordBuilderFactory recordBuilder;
 
     @Service
-    AdlsGen2APIClient client;
+    private AdlsGen2APIClient client;
 
     @Service
-    AccessTokenProvider accessTokenProvider;
+    private AccessTokenProvider accessTokenProvider;
 
     private transient String auth;
 
@@ -129,10 +129,11 @@ public class AdlsGen2Service implements Serializable {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private RuntimeException handleError(int status, Map<String, List<String>> headers) {
         StringBuilder sb = new StringBuilder("[" + status + "] ");
         List<String> errors = headers.get(HeaderConstants.HEADER_X_MS_ERROR_CODE);
-        if (errors != null && errors.size() > 0) {
+        if (errors != null && errors.isEmpty()) {
             for (String error : errors) {
                 sb.append(error);
                 if (ApiErrors.valueOf(error) != null) {
@@ -169,6 +170,7 @@ public class AdlsGen2Service implements Serializable {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public String getAccessToken(@Configuration("connection") final AdlsGen2Connection connection) {
         accessTokenProvider.base(connection.oauthUrl());
         String payload = String.format(Constants.TOKEN_FORM, connection.getClientId(), connection.getClientSecret());
@@ -176,6 +178,7 @@ public class AdlsGen2Service implements Serializable {
         return token.body().getString(Constants.ATTR_ACCESS_TOKEN);
     }
 
+    @SuppressWarnings("unchecked")
     public List<String> filesystemList(@Configuration("connection") final AdlsGen2Connection connection) {
         preprareRequest(connection);
         Response<JsonObject> result = handleResponse(client.filesystemList(connection, auth, sasMap, Constants.ATTR_ACCOUNT));
@@ -187,6 +190,7 @@ public class AdlsGen2Service implements Serializable {
         return fs;
     }
 
+    @SuppressWarnings("unchecked")
     public JsonArray pathList(@Configuration("configuration") final InputConfiguration configuration) {
         preprareRequest(configuration.getDataSet().getConnection());
         Response<JsonObject> result = handleResponse(client.pathList( //
@@ -220,6 +224,7 @@ public class AdlsGen2Service implements Serializable {
         return Paths.get(blobPath).getFileName().toString();
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, String> pathGetProperties(@Configuration("dataSet") final AdlsGen2DataSet dataSet) {
         preprareRequest(dataSet.getConnection());
         Map<String, String> properties = new HashMap<>();
@@ -285,6 +290,7 @@ public class AdlsGen2Service implements Serializable {
         return getBlobInformations(dataSet).isExists();
     }
 
+    @SuppressWarnings("unchecked")
     public Iterator<Record> pathRead(@Configuration("configuration") final InputConfiguration configuration) {
         preprareRequest(configuration.getDataSet().getConnection());
         Response<InputStream> result = handleResponse(client.pathRead( //
@@ -299,6 +305,7 @@ public class AdlsGen2Service implements Serializable {
         return convertToRecordList(configuration.getDataSet(), result.body());
     }
 
+    @SuppressWarnings("unchecked")
     public Response<JsonObject> pathCreate(@Configuration("configuration") final OutputConfiguration configuration) {
         preprareRequest(configuration.getDataSet().getConnection());
         Response<JsonObject> result = handleResponse(client.pathCreate( //
@@ -313,6 +320,7 @@ public class AdlsGen2Service implements Serializable {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     public Response<JsonObject> pathUpdate(@Configuration("configuration") final OutputConfiguration configuration,
             String content, long position) {
         preprareRequest(configuration.getDataSet().getConnection());
@@ -340,6 +348,7 @@ public class AdlsGen2Service implements Serializable {
      * @param position
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Response<JsonObject> flushBlob(@Configuration("configuration") OutputConfiguration configuration, long position) {
         Response<JsonObject> result;
         result = handleResponse(client.pathUpdate( //
@@ -358,14 +367,13 @@ public class AdlsGen2Service implements Serializable {
     }
 
     /*
-     *
+     * {"contentLength":"21","etag":"Mon, 25 Mar 2019 15:35:47 GMT","group":"$superuser","lastModified":"Mon, 25 Mar 2019
+     * 15:35:47 GMT","name":"myNewFolder/customer.csv","owner":"$superuser","permissions":"rw-r-----"}
      */
     @Data
     @ToString
     public class BlobInformations {
 
-        // {"contentLength":"21","etag":"Mon, 25 Mar 2019 15:35:47 GMT","group":"$superuser","lastModified":"Mon, 25 Mar 2019
-        // 15:35:47 GMT","name":"myNewFolder/customer.csv","owner":"$superuser","permissions":"rw-r-----"}
         public String etag;
 
         public String group;
