@@ -144,6 +144,20 @@ class AdlsGen2ServiceTest extends AdlsGen2TestBase {
     }
 
     @Test
+    void pathReadParquetFile() {
+        String path = "demo_gen2/in/parquet_file.parquet";
+        inputConfiguration.getDataSet().setBlobPath(path);
+        inputConfiguration.getDataSet().setFormat(FileFormat.PARQUET);
+        Iterator<Record> result = service.pathRead(inputConfiguration);
+        while (result.hasNext()) {
+            Record r = result.next();
+            assertNotNull(r);
+
+            log.info("{} {}", r, r.getArray(String.class, "topics"));
+        }
+    }
+
+    @Test
     void pathReadMediumFile() {
         // String path = "myNewFolder/customer.csv";
         String path = "myNewFolder/customer_20190325.csv";

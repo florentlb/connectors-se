@@ -18,10 +18,12 @@ import java.util.Properties;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.talend.components.adlsgen2.common.format.FileFormat;
+import org.talend.components.adlsgen2.common.format.avro.AvroConverter;
 import org.talend.components.adlsgen2.common.format.csv.CsvConfiguration;
 import org.talend.components.adlsgen2.common.format.csv.CsvConverter;
 import org.talend.components.adlsgen2.common.format.csv.CsvFieldDelimiter;
 import org.talend.components.adlsgen2.common.format.csv.CsvRecordSeparator;
+import org.talend.components.adlsgen2.common.format.parquet.ParquetConverter;
 import org.talend.components.adlsgen2.common.format.unknown.UnknownConverter;
 import org.talend.components.adlsgen2.dataset.AdlsGen2DataSet;
 import org.talend.components.adlsgen2.datastore.AdlsGen2Connection;
@@ -30,6 +32,7 @@ import org.talend.components.adlsgen2.datastore.SharedKeyUtils;
 import org.talend.components.adlsgen2.input.InputConfiguration;
 import org.talend.components.adlsgen2.output.OutputConfiguration;
 import org.talend.components.adlsgen2.service.AdlsGen2Service;
+import org.talend.components.adlsgen2.service.I18n;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
@@ -146,8 +149,14 @@ public class AdlsGen2TestBase implements Serializable {
         // inject needed services
         components.injectServices(UnknownConverter.of());
         components.injectServices(CsvConverter.class);
+        components.injectServices(ParquetConverter.of());
         components.injectServices(CsvConverter.of());
-        CsvConverter.recordBuilderFactory = components.findService(RecordBuilderFactory.class);
+        RecordBuilderFactory svcRcdBld = components.findService(RecordBuilderFactory.class);
+        I18n i18 = components.findService(I18n.class);
+        CsvConverter.recordBuilderFactory = svcRcdBld;
+        AvroConverter.recordBuilderFactory = svcRcdBld;
+        AvroConverter.i18n = i18;
+        ParquetConverter.recordBuilderFactory = svcRcdBld;
     }
 
     protected Record createData() {

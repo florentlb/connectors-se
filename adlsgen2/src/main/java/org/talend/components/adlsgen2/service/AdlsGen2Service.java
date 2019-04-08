@@ -33,6 +33,7 @@ import javax.json.JsonObject;
 import javax.json.JsonValue;
 
 import org.talend.components.adlsgen2.common.format.csv.CsvIterator;
+import org.talend.components.adlsgen2.common.format.parquet.ParquetIterator;
 import org.talend.components.adlsgen2.common.format.unknown.UnknownIterator;
 import org.talend.components.adlsgen2.dataset.AdlsGen2DataSet;
 import org.talend.components.adlsgen2.datastore.AdlsGen2Connection;
@@ -162,8 +163,10 @@ public class AdlsGen2Service implements Serializable {
             return CsvIterator.Builder.of().withConfiguration(dataSet.getCsvConfiguration()).parse(content);
         case AVRO:
         case JSON:
-        case PARQUET:
             throw new IllegalArgumentException("Not implemented");
+        case PARQUET:
+            log.warn("[convertToRecordList] PARQUET");
+            return ParquetIterator.Builder.of().withConfiguration(dataSet.getParquetConfiguration()).parse(content);
         case UNKNOWN:
             return UnknownIterator.Builder.of().withConfiguration(dataSet.getUnknownConfiguration()).parse(content);
         }

@@ -12,66 +12,86 @@
 // ============================================================================
 package org.talend.components.adlsgen2.common.format.parquet;
 
-// import org.apache.parquet.hadoop.metadata.ParquetMetadata;
-public class ParquetConverter {// implements RecordConverter<ParquetMetadata> {
+import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericRecord;
+import org.talend.components.adlsgen2.common.converter.RecordConverter;
+import org.talend.components.adlsgen2.common.format.avro.AvroConverter;
+import org.talend.sdk.component.api.record.Record.Builder;
+import org.talend.sdk.component.api.service.Service;
+import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class ParquetConverter extends AvroConverter implements RecordConverter<GenericRecord> {
+
+    @Service
+    public static RecordBuilderFactory recordBuilderFactory;
 
     public static ParquetConverter of() {
         return new ParquetConverter();
     }
 
     private ParquetConverter() {
-
+        log.warn("[ParquetConverter]");
     }
 
-    // @Override
-    // public Record toRecord(ParquetMetadata value) {
-    // // try {
-    // // InputFile file = new InputFile() {
-    // // @Override
-    // // public long getLength() throws IOException {
-    // // throw new UnsupportedOperationException("#getLength()");
-    // // }
-    // //
-    // // @Override
-    // // public SeekableInputStream newStream() throws IOException {
-    // // throw new UnsupportedOperationException("#newStream()");
-    // // }
-    // // };
-    // // ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(file).build();
-    // // GenericRecord nextRecord = reader.read();
-    // // } catch (IOException e) {
-    // // throw new IllegalStateException(e);
-    // // }
-    // //
-    // //
-    // throw new UnsupportedOperationException("#toRecord()");
-    // }
-    //
-    // @Override
-    // public ParquetMetadata fromRecord(Record record) {
-    // // AvroRecord.class.cast(in).unwrap(IndexedRecord.class))
-    // // new AvroRecord(in)
-    //
-    // // IndexedRecord ir = AvroRecord.class.cast(record).unwrap(IndexedRecord.class);
-    // // AvroRecord recr = new AvroRecord(record);
-    // // new AvroSchemaBuilder().withElementSchema(recr.getSchema());
-    // // org.apache.avro.Schema schema = null;
-    // // try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.<GenericData.Record>builder(file)
-    // // .withSchema(schema)
-    // // .withCompressionCodec(CompressionCodecName.GZIP)
-    // // // .withConf(conf)
-    // // .withPageSize(4 * 1024 * 1024) //For compression
-    // // .withRowGroupSize(16 * 1024 * 1024) //For write buffering (Page size)
-    // // .build()) {
-    // //
-    // // //We only have one record to write in our example
-    // // writer.write(record);
-    // //
-    // //
-    // // } catch (Exception e) {
-    // //
-    // // }
-    //
-    // throw new UnsupportedOperationException("#fromRecord()");
-    // }
+    public org.talend.sdk.component.api.record.Record toRcord(GenericRecord value) {
+        log.warn("[toRecord] record: {}\nschema: {}", value, value.getSchema());
+        log.warn("[toRecord] record: {}\nfields: {}", value, value.getSchema().getFields());
+        Builder record = recordBuilderFactory.newRecordBuilder();
+        for (Field f : value.getSchema().getFields()) {
+            String fieldName = f.name();
+            String fieldValue = String.valueOf(value.get(fieldName));
+            log.warn("[toRecord] K:{} V:{} ({}).", fieldName, fieldValue, f.schema().getType());
+            switch (f.schema().getType()) {
+            case RECORD:
+                break;
+            case ENUM:
+                break;
+            case ARRAY:
+                log.warn("[toRecord] ARRAY {}", value.getSchema().getTypes());
+                log.warn("[toRecord] ARRAY {}", value.getSchema().getValueType());
+                log.warn("[toRecord] ARRAY {}", value.getSchema().getFields());
+                break;
+            case MAP:
+                break;
+            case UNION:
+                break;
+            case FIXED:
+                break;
+            case STRING:
+                record.withString(fieldName, fieldValue);
+                break;
+            case BYTES:
+                record.withBytes(fieldName, fieldValue.getBytes());
+                break;
+            case INT:
+                record.withInt(fieldName, Integer.parseInt(fieldValue));
+                break;
+            case LONG:
+                record.withLong(fieldName, Long.parseLong(fieldValue));
+                break;
+            case FLOAT:
+                record.withFloat(f.name(), Float.parseFloat(fieldValue));
+                break;
+            case DOUBLE:
+                record.withDouble(f.name(), Double.parseDouble(fieldValue));
+                break;
+            case BOOLEAN:
+                record.withBoolean(f.name(), Boolean.parseBoolean(fieldValue));
+                break;
+            case NULL:
+                record.withString(f.name(), fieldValue);
+                break;
+            }
+        }
+        return record.build();
+    }
+
+    @Override
+    public GenericRecord fromRecord(org.talend.sdk.component.api.record.Record record) {
+
+        throw new UnsupportedOperationException("#fromRecord()");
+    }
 }

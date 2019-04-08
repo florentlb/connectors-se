@@ -30,7 +30,6 @@ import org.talend.sdk.component.api.service.http.UseConfigurer;
 public interface AdlsGen2APIClient extends HttpClient {
 
     // GET http://{accountName}.{dnsSuffix}/?resource=account
-
     /**
      * @return Filesystem[]
      */
