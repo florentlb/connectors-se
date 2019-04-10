@@ -15,6 +15,7 @@ package org.talend.components.adlsgen2.dataset;
 import java.io.Serializable;
 
 import org.talend.components.adlsgen2.common.format.FileFormat;
+import org.talend.components.adlsgen2.common.format.avro.AvroConfiguration;
 import org.talend.components.adlsgen2.common.format.csv.CsvConfiguration;
 import org.talend.components.adlsgen2.common.format.parquet.ParquetConfiguration;
 import org.talend.components.adlsgen2.common.format.unknown.UnknownConfiguration;
@@ -40,6 +41,7 @@ import static org.talend.components.adlsgen2.service.UIActionService.ACTION_FILE
         @GridLayout.Row("blobPath"), //
         @GridLayout.Row("format"), //
         @GridLayout.Row("csvConfiguration"), //
+        @GridLayout.Row("avroConfiguration"), //
         @GridLayout.Row("parquetConfiguration"), //
         @GridLayout.Row("unknownConfiguration"), //
 })
@@ -71,6 +73,10 @@ public class AdlsGen2DataSet implements Serializable {
     @Option
     @ActiveIf(target = "format", value = "CSV")
     private CsvConfiguration csvConfiguration;
+
+    @Option
+    @ActiveIf(target = "format", value = "AVRO")
+    private AvroConfiguration avroConfiguration;
 
     @Option
     @ActiveIf(target = "format", value = "PARQUET")

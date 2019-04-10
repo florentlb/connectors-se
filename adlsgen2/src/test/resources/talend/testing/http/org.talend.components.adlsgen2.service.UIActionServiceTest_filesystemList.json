@@ -16,7 +16,7 @@
         "Transfer-Encoding":"chunked",
         "x-ms-version":"2018-11-09",
         "Server":"Windows-Azure-HDFS/1.0 Microsoft-HTTPAPI/2.0",
-        "x-ms-request-id":"e235be8b-d01f-005b-3e6f-ef76ee000000",
+        "x-ms-request-id":"370fe354-601f-004e-728c-ef615d000000",
         "x-ms-continuation":"",
         "Content-Type":"application/json;charset=utf-8"
       },

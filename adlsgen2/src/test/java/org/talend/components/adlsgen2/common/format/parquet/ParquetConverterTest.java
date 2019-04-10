@@ -75,12 +75,13 @@ class ParquetConverterTest extends AdlsGen2TestBase {
         GenericRecord current;
         Record reconverted;
         current = reader.read();
+        assertNotNull(current);
         reconverted = converter.toRecord(current);
         assertNotNull(reconverted);
         assertEquals("Bonjour", reconverted.getString("string1"));
         assertEquals("Olà", reconverted.getString("string2"));
         assertEquals(71, reconverted.getInt("int"));
-        assertEquals(true, reconverted.getBoolean("boolean"));
+        assertTrue(reconverted.getBoolean("boolean"));
         assertEquals(1971L, reconverted.getLong("long"));
         assertEquals(new Date(2019, 04, 22).getTime(), reconverted.getLong("datetime"));
         assertEquals(20.5f, reconverted.getFloat("float"));
