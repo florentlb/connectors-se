@@ -12,5 +12,11 @@
 // ============================================================================
 package org.talend.components.adlsgen2.common.format.parquet;
 
+import org.talend.sdk.component.api.meta.Documentation;
+
+import lombok.Data;
+
+@Data
+@Documentation("Parquet Configuration")
 public class ParquetConfiguration {
 }

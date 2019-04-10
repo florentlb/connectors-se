@@ -14,6 +14,9 @@ package org.talend.components.adlsgen2;
 
 import java.io.FileInputStream;
 import java.io.Serializable;
+import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.Properties;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +37,8 @@ import org.talend.components.adlsgen2.output.OutputConfiguration;
 import org.talend.components.adlsgen2.service.AdlsGen2Service;
 import org.talend.components.adlsgen2.service.I18n;
 import org.talend.sdk.component.api.record.Record;
+import org.talend.sdk.component.api.record.Schema.Entry;
+import org.talend.sdk.component.api.record.Schema.Type;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 import org.talend.sdk.component.junit.BaseComponentsHandler;
@@ -115,8 +120,12 @@ public class AdlsGen2TestBase implements Serializable {
     @HttpApiInject()
     private HttpApiHandler<?> handler;
 
+    protected Record versatileRecord;
+
+    protected Record complexRecord;
+
     @BeforeEach
-    void setUp() {
+    protected void setUp() {
         service = new AdlsGen2Service();
 
         connection = new AdlsGen2Connection();
@@ -146,6 +155,26 @@ public class AdlsGen2TestBase implements Serializable {
         outputConfiguration = new OutputConfiguration();
         outputConfiguration.setDataSet(dataSet);
 
+        // some demo records
+        versatileRecord = recordBuilderFactory.newRecordBuilder() //
+                .withString("string1", "Bonjour") //
+                .withString("string2", "Olà") //
+                .withInt("int", 71) //
+                .withBoolean("boolean", true) //
+                .withLong("long", 1971L) //
+                .withDateTime("datetime", new Date(2019, 04, 22)) //
+                .withFloat("float", 20.5f) //
+                .withDouble("double", 20.5) //
+                .build();
+        Entry er = recordBuilderFactory.newEntryBuilder().withName("record").withType(Type.RECORD)
+                .withElementSchema(versatileRecord.getSchema()).build();
+        Entry ea = recordBuilderFactory.newEntryBuilder().withName("array").withType(Type.ARRAY)
+                .withElementSchema(recordBuilderFactory.newSchemaBuilder(Type.ARRAY).withType(Type.STRING).build()).build();
+        complexRecord = recordBuilderFactory.newRecordBuilder() //
+                .withString("name", "ComplexR") //
+                .withRecord(er, versatileRecord) //
+                .withDateTime("now", ZonedDateTime.now()) //
+                .withArray(ea, Arrays.asList("ary1", "ary2", "ary3")).build();
         // inject needed services
         components.injectServices(UnknownConverter.of());
         components.injectServices(CsvConverter.class);
@@ -157,6 +186,7 @@ public class AdlsGen2TestBase implements Serializable {
         AvroConverter.recordBuilderFactory = svcRcdBld;
         AvroConverter.i18n = i18;
         ParquetConverter.recordBuilderFactory = svcRcdBld;
+        UnknownConverter.recordBuilderFactory = svcRcdBld;
     }
 
     protected Record createData() {

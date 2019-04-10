@@ -13,10 +13,14 @@
 package org.talend.components.adlsgen2.common.converter;
 
 import org.talend.sdk.component.api.record.Record;
+import org.talend.sdk.component.api.record.Schema;
 
 public interface RecordConverter<T> {
 
-    Record toRecord(T value);
+    Schema inferSchema(T record);
+
+    Record toRecord(T record);
 
     T fromRecord(Record record);
+
 }

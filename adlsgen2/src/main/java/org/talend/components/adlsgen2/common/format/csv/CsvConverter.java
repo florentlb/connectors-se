@@ -21,6 +21,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.talend.components.adlsgen2.common.converter.RecordConverter;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.record.Record.Builder;
+import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.configuration.Configuration;
 import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
@@ -51,6 +52,26 @@ public class CsvConverter implements RecordConverter<CSVRecord> {
 
     public static CsvConverter of() {
         return new CsvConverter();
+    }
+
+    @Override
+    public Schema inferSchema(CSVRecord record) {
+        throw new UnsupportedOperationException("#inferSchema()");
+    }
+
+    @Override
+    public Record toRecord(CSVRecord value) {
+        Builder record = recordBuilderFactory.newRecordBuilder();
+        for (String s : csvFormat.getHeader()) {
+            record.withString(s, value.get(s));
+        }
+        log.debug("record: {}", record.build());
+        return record.build();
+    }
+
+    @Override
+    public CSVRecord fromRecord(Record record) {
+        throw new UnsupportedOperationException("#fromRecord()");
     }
 
     public CsvConverter withConfiguration(@Configuration("csvConfiguration") final CsvConfiguration configuration) {
@@ -87,18 +108,4 @@ public class CsvConverter implements RecordConverter<CSVRecord> {
         return this;
     }
 
-    @Override
-    public Record toRecord(CSVRecord value) {
-        Builder record = recordBuilderFactory.newRecordBuilder();
-        for (String s : csvFormat.getHeader()) {
-            record.withString(s, value.get(s));
-        }
-        log.warn("record: {}", record.build());
-        return record.build();
-    }
-
-    @Override
-    public CSVRecord fromRecord(Record record) {
-        throw new UnsupportedOperationException("#fromRecord()");
-    }
 }

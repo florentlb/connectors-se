@@ -139,7 +139,6 @@ class AdlsGen2ServiceTest extends AdlsGen2TestBase {
         while (result.hasNext()) {
             Record r = result.next();
             assertNotNull(r);
-            log.info("{}", r);
         }
     }
 

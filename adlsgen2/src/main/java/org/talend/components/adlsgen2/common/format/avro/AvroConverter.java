@@ -21,9 +21,11 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
 
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.talend.components.adlsgen2.common.converter.RecordConverter;
@@ -51,29 +53,158 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
 
     private Schema schema;
 
-    // TODO cache schema ?
+    public static AvroConverter of() {
+        return new AvroConverter();
+    }
+
+    protected AvroConverter() {
+    }
+
+    @Override
+    public Schema inferSchema(GenericRecord record) {
+        Schema.Builder builder = recordBuilderFactory.newSchemaBuilder(Type.RECORD);
+        record.getSchema().getFields().stream().map(this::inferAvroField).forEach(builder::withEntry);
+        return builder.build();
+    }
 
     @Override
     public Record toRecord(GenericRecord record) {
         if (schema == null) {
-            Schema.Builder schemaBuilder = recordBuilderFactory.newSchemaBuilder(Type.RECORD);
-            record.getSchema().getFields().stream().map(this::inferSchemaField).forEach(schemaBuilder::withEntry);
-            schema = schemaBuilder.build();
+            schema = inferSchema(record);
         }
-        return convertGenericRecordToTacoKitRecord(record, record.getSchema().getFields(),
-                recordBuilderFactory.newRecordBuilder(schema));
+        return convertAvroToRecord(record, record.getSchema().getFields(), recordBuilderFactory.newRecordBuilder(schema));
     }
 
     @Override
     public GenericRecord fromRecord(Record record) {
-        throw new UnsupportedOperationException("#fromRecord()");
+        record.getSchema().getType();
+        log.warn("============================="); //
+        org.apache.avro.Schema s = inferAvroSchema(record.getSchema());
+        GenericRecord avroRecord = new GenericData.Record(s);
+        // TODO fill record
+                return fillAvroRecord( record, avroRecord);
+        //return avroRecord;
     }
 
-    private Record convertGenericRecordToTacoKitRecord(GenericRecord genericRecord, List<org.apache.avro.Schema.Field> fields) {
-        return convertGenericRecordToTacoKitRecord(genericRecord, fields, null);
+    private GenericRecord fillAvroRecord(Record fromRecord, GenericRecord toRecord) {
+
+        for (org.apache.avro.Schema.Field f:  toRecord.getSchema().getFields()){
+            String name = f.name();
+            switch(f.schema().getType()){
+                case RECORD:
+                    toRecord.put(name, fromRecord.getRecord(name));
+                    break;
+                case ENUM:
+                    break;
+                case ARRAY:
+                    break;
+                case MAP:
+                    break;
+                case UNION:
+                    break;
+                case FIXED:
+                    break;
+                case STRING:
+                    break;
+                case BYTES:
+                    break;
+                case INT:
+                    break;
+                case LONG:
+                    break;
+                case FLOAT:
+                    break;
+                case DOUBLE:
+                    break;
+                case BOOLEAN:
+                    break;
+                case NULL:
+                    break;
+            }
+
+
+        }
+
+
+        return toRecord;
     }
 
-    private Record convertGenericRecordToTacoKitRecord(GenericRecord genericRecord, List<org.apache.avro.Schema.Field> fields,
+
+
+    private org.apache.avro.Schema.Type translateToAvroType(Type type) {
+        switch (type) {
+        case RECORD:
+            return org.apache.avro.Schema.Type.RECORD;
+        case ARRAY:
+            return org.apache.avro.Schema.Type.ARRAY;
+        case STRING:
+            return org.apache.avro.Schema.Type.STRING;
+        case BYTES:
+            return org.apache.avro.Schema.Type.BYTES;
+        case INT:
+            return org.apache.avro.Schema.Type.INT;
+        case LONG:
+        case DATETIME:
+            return org.apache.avro.Schema.Type.LONG;
+        case FLOAT:
+            return org.apache.avro.Schema.Type.FLOAT;
+        case DOUBLE:
+            return org.apache.avro.Schema.Type.DOUBLE;
+        case BOOLEAN:
+            return org.apache.avro.Schema.Type.BOOLEAN;
+        }
+        throw new IllegalStateException(i18n.undefinedType( type.name()));
+    }
+
+    private org.apache.avro.Schema inferAvroSchema(Schema schema) {
+        List<org.apache.avro.Schema.Field> fields = new ArrayList<>();
+        for (Entry e : schema.getEntries()) {
+            String name = e.getName();
+            String comment = e.getComment();
+            Object defaultValue = e.getDefaultValue();
+            Type type = e.getType();
+            org.apache.avro.Schema builder;
+            switch (type) {
+            case RECORD:
+                builder = inferAvroSchema(e.getElementSchema());
+                break;
+            case ARRAY:
+                builder = SchemaBuilder.array()
+                        .items(org.apache.avro.Schema.create(translateToAvroType(e.getElementSchema().getType())));
+                break;
+            case STRING:
+            case BYTES:
+            case INT:
+            case LONG:
+            case FLOAT:
+            case DOUBLE:
+            case BOOLEAN:
+                builder = org.apache.avro.Schema.create(translateToAvroType(type));
+                break;
+            case DATETIME:
+                builder = org.apache.avro.Schema.create(org.apache.avro.Schema.Type.LONG);
+                builder.addProp("talend.field.pattern", ""); //
+                builder.addProp("java-class", Date.class.getCanonicalName());
+                break;
+            default:
+                throw new IllegalStateException(i18n.undefinedType( e.getType().name()));
+            }
+            org.apache.avro.Schema.Field field = new org.apache.avro.Schema.Field(name, builder, comment, defaultValue);
+            fields.add(field);
+        }
+
+        return org.apache.avro.Schema.createRecord(fields);
+    }
+
+    private GenericRecord convertRecordToAvro(Record record) {
+        return null;
+    }
+
+    private Record convertAvroToRecord(GenericRecord genericRecord, List<org.apache.avro.Schema.Field> fields) {
+        return convertAvroToRecord(genericRecord, fields, null);
+    }
+
+    private Record convertAvroToRecord(GenericRecord genericRecord, List<org.apache.avro.Schema.Field> fields,
             Record.Builder recordBuilder) {
         if (recordBuilder == null) {
             recordBuilder = recordBuilderFactory.newRecordBuilder();
@@ -83,7 +214,7 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
             if (value == null) {
                 continue;
             }
-            Entry entry = inferSchemaField(field);
+            Entry entry = inferAvroField(field);
             if (field.schema().getType().equals(ARRAY)) {
                 processArrayField(field, value, recordBuilder, entry);
 
@@ -94,7 +225,7 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
         return recordBuilder.build();
     }
 
-    private Entry inferSchemaField(org.apache.avro.Schema.Field field) {
+    private Entry inferAvroField(org.apache.avro.Schema.Field field) {
         Entry.Builder builder = recordBuilderFactory.newEntryBuilder();
         builder.withName(field.name());
         org.apache.avro.Schema.Type type = field.schema().getType();
@@ -122,30 +253,31 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
         case DOUBLE:
         case BOOLEAN:
         case NULL:
-            builder.withType(translateType(type));
+            builder.withType(translateToRecordType(type));
             break;
         }
         return builder.build();
     }
 
     private Schema createNestedSchema(org.apache.avro.Schema.Field field) {
-        Schema.Builder nestedSchemaBuilder = recordBuilderFactory.newSchemaBuilder(Type.RECORD);
-        field.schema().getFields().stream().map(this::inferSchemaField).forEach(nestedSchemaBuilder::withEntry);
-        return nestedSchemaBuilder.build();
+        Schema.Builder builder = recordBuilderFactory.newSchemaBuilder(Type.RECORD);
+        field.schema().getFields().stream().map(this::inferAvroField).forEach(builder::withEntry);
+        return builder.build();
     }
 
     private Schema createArraySchema(org.apache.avro.Schema.Field field) {
         Schema.Builder schemaBuilder = recordBuilderFactory.newSchemaBuilder(Type.RECORD);
         Entry.Builder entryBuilder = recordBuilderFactory.newEntryBuilder();
         entryBuilder.withName(field.name());
-        entryBuilder.withType(translateType(field.schema().getElementType().getType()));
+        entryBuilder.withType(translateToRecordType(field.schema().getElementType().getType()));
         schemaBuilder.withEntry(entryBuilder.build());
         return schemaBuilder.build();
     }
 
     /**
+     *
      */
-    private Type translateType(org.apache.avro.Schema.Type type) {
+    private Type translateToRecordType(org.apache.avro.Schema.Type type) {
         switch (type) {
         // TODO manage these cases?
         // case ENUM:
@@ -177,7 +309,7 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
         case BOOLEAN:
             return Type.BOOLEAN;
         default:
-            throw new RuntimeException(i18n.undefinedType(type.name()));
+            throw new new IllegalStateException(i18n.undefinedType(type.name()));
         }
     }
 
@@ -187,7 +319,7 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
         switch (field.schema().getElementType().getType()) {
         case RECORD:
             recordBuilder.withArray(entry, ((GenericData.Array<GenericRecord>) value).stream()
-                    .map(record -> convertGenericRecordToTacoKitRecord(record, field.schema().getFields())).collect(toList()));
+                    .map(record -> convertAvroToRecord(record, field.schema().getFields())).collect(toList()));
             break;
         case STRING:
             recordBuilder.withArray(entry, (ArrayList<String>) value);
@@ -221,7 +353,7 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
         // recordBuilder.withArray(entry, convertStringDateArrayToLongArray(value, this::getDateTime));
         // break;
         default:
-            throw new RuntimeException(i18n.undefinedType(entry.getType().name()));
+            throw new new IllegalStateException(i18n.undefinedType(entry.getType().name()));
         }
     }
 
@@ -229,7 +361,7 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
         switch (field.schema().getType()) {
         case RECORD:
             recordBuilder.withRecord(entry,
-                    convertGenericRecordToTacoKitRecord(GenericData.Record.class.cast(value), field.schema().getFields()));
+                    convertAvroToRecord(GenericData.Record.class.cast(value), field.schema().getFields()));
             break;
         case STRING:
             recordBuilder.withString(entry, value.toString());
@@ -267,7 +399,7 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
         case NULL:
             break;
         default:
-            throw new RuntimeException(i18n.undefinedType(entry.getType().name()));
+            throw new new IllegalStateException(i18n.undefinedType(entry.getType().name()));
         }
     }
 
@@ -280,7 +412,7 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
     }
 
     private Long getTime(Object obj) {
-        return Instant.ofEpochMilli(LocalTime.parse(obj.toString(), DateTimeFormatter.ISO_TIME).toSecondOfDay() * 1000)
+        return Instant.ofEpochMilli(LocalTime.parse(obj.toString(), DateTimeFormatter.ISO_TIME).toSecondOfDay() * 1000L)
                 .toEpochMilli();
     }
 
