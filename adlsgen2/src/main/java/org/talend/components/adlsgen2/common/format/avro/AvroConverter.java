@@ -1,15 +1,15 @@
-// ============================================================================
-//
-// Copyright (C) 2006-2019 Talend Inc. - www.talend.com
-//
-// This source code is available under agreement available at
-// %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
-//
-// You should have received a copy of the agreement
-// along with this program; if not, write to Talend SA
-// 9 rue Pages 92150 Suresnes, France
-//
-// ============================================================================
+/*
+ * Copyright (C) 2006-2019 Talend Inc. - www.talend.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package org.talend.components.adlsgen2.common.format.avro;
 
 import java.nio.ByteBuffer;
@@ -33,7 +33,6 @@ import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import static java.util.stream.Collectors.toList;
-import static org.apache.avro.Schema.Type.ARRAY;
 
 @Slf4j
 public class AvroConverter implements RecordConverter<GenericRecord> {
@@ -215,17 +214,13 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
     protected Record avroToRecord(GenericRecord genericRecord, List<org.apache.avro.Schema.Field> fields,
             Record.Builder recordBuilder) {
         if (recordBuilder == null) {
-            recordBuilder = recordBuilderFactory.newRecordBuilder();
+            recordBuilder = recordBuilderFactory.newRecordBuilder(schema);
         }
         for (org.apache.avro.Schema.Field field : fields) {
             Object value = genericRecord.get(field.name());
-            if (value == null) {
-                continue;
-            }
             Entry entry = inferAvroField(field);
-            if (field.schema().getType().equals(ARRAY)) {
+            if (field.schema().getType().equals(org.apache.avro.Schema.Type.ARRAY)) {
                 buildArrayField(field, value, recordBuilder, entry);
-
             } else {
                 buildField(field, value, recordBuilder, entry);
             }
@@ -237,13 +232,26 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
         Entry.Builder builder = recordBuilderFactory.newEntryBuilder();
         builder.withName(field.name());
         org.apache.avro.Schema.Type type = field.schema().getType();
+        // handle NULLable field
+        boolean nullable = false;
+        if (org.apache.avro.Schema.Type.UNION.equals(type)) {
+            List<org.apache.avro.Schema.Type> tt = field.schema().getTypes().stream().map(org.apache.avro.Schema::getType)
+                    .filter(t -> !t.equals(org.apache.avro.Schema.Type.NULL)).collect(toList());
+            nullable = true;
+            if (tt.size() == 0 || tt.size() > 1) {
+                throw new IllegalStateException("[inferAvroField] Problem with UNION: cannot determine Type");
+            }
+            type = tt.get(0);
+        }
         switch (type) {
         case RECORD:
+            builder.withNullable(nullable);
             builder.withType(Type.RECORD);
             builder.withElementSchema(buildRecordFieldSchema(field));
             break;
         case ENUM:
         case ARRAY:
+            builder.withNullable(nullable);
             builder.withType(Type.ARRAY);
             builder.withElementSchema(buildArrayFieldSchema(field));
             break;
@@ -255,6 +263,7 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
         case DOUBLE:
         case BOOLEAN:
         case NULL:
+            builder.withNullable(nullable);
             builder.withType(translateToRecordType(type));
             break;
         }
@@ -336,12 +345,15 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
     }
 
     protected void buildField(org.apache.avro.Schema.Field field, Object value, Record.Builder recordBuilder, Entry entry) {
-        switch (field.schema().getType()) {
+        if (value == null) {
+            return;
+        }
+        switch (entry.getType()) {
         case RECORD:
             recordBuilder.withRecord(entry, avroToRecord(GenericData.Record.class.cast(value), field.schema().getFields()));
             break;
         case STRING:
-            recordBuilder.withString(entry, value.toString());
+            recordBuilder.withString(entry, String.valueOf(value));
             break;
         case BYTES:
             recordBuilder.withBytes(entry, ((java.nio.ByteBuffer) value).array());
@@ -361,10 +373,10 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
         case LONG:
             recordBuilder.withLong(entry, (Long) value);
             break;
-        case NULL:
-            break;
         default:
             throw new IllegalStateException(i18n.undefinedType(entry.getType().name()));
+        case DATETIME:
+            break;
         }
     }
 }
