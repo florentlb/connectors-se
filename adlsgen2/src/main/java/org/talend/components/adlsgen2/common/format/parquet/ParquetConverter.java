@@ -21,7 +21,7 @@ import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ParquetConverter extends AvroConverter implements RecordConverter<GenericRecord> {
+public final class ParquetConverter extends AvroConverter implements RecordConverter<GenericRecord> {
 
     @Service
     public static RecordBuilderFactory recordBuilderFactory;
@@ -34,8 +34,4 @@ public class ParquetConverter extends AvroConverter implements RecordConverter<G
         super();
     }
 
-    @Override
-    public GenericRecord fromRecord(org.talend.sdk.component.api.record.Record record) {
-        throw new UnsupportedOperationException("#fromRecord()");
-    }
 }

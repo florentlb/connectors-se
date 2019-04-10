@@ -88,6 +88,7 @@ class AvroConverterTest extends AdlsGen2TestBase {
     @Test
     void fromRecord() {
         GenericRecord record = converter.fromRecord(versatileRecord);
+        assertNotNull(record);
         assertEquals("Bonjour", record.get("string1"));
         assertEquals("Olà", record.get("string2"));
         assertEquals(71, record.get("int"));
@@ -96,7 +97,6 @@ class AvroConverterTest extends AdlsGen2TestBase {
         assertEquals(new Date(2019, 04, 22).getTime(), record.get("datetime"));
         assertEquals(20.5f, record.get("float"));
         assertEquals(20.5, record.get("double"));
-        assertNotNull(record);
         record = converter.fromRecord(complexRecord);
         assertNotNull(record);
         assertEquals("ComplexR", record.get("name"));

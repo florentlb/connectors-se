@@ -205,7 +205,7 @@ public class AvroConverter implements RecordConverter<GenericRecord> {
             fields.add(field);
         }
 
-        return org.apache.avro.Schema.createRecord(fields);
+        return org.apache.avro.Schema.createRecord("talend", "", "org.talend.components.adlsgen2", false, fields);
     }
 
     protected Record avroToRecord(GenericRecord genericRecord, List<org.apache.avro.Schema.Field> fields) {

@@ -124,8 +124,12 @@ public class AdlsGen2TestBase implements Serializable {
 
     protected Record complexRecord;
 
+    protected String tmpDir;
+
     @BeforeEach
     protected void setUp() {
+        tmpDir = System.getProperty("java.io.tmpdir", ".") + "/";
+
         service = new AdlsGen2Service();
 
         connection = new AdlsGen2Connection();

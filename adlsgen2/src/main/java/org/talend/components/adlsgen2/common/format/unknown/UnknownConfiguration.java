@@ -19,6 +19,6 @@ import org.talend.sdk.component.api.meta.Documentation;
 import lombok.Data;
 
 @Data
-@Documentation("Unkwnown File Format Configuration")
+@Documentation("Unknown File Format Configuration")
 public class UnknownConfiguration implements Serializable {
 }
