@@ -13,6 +13,7 @@
 package org.talend.components.adlsgen2.datastore;
 
 import java.net.URL;
+import java.security.InvalidKeyException;
 import java.util.HashMap;
 
 import org.junit.jupiter.api.AfterEach;
@@ -38,8 +39,13 @@ class SharedKeyCredentialsUtilsTest extends AdlsGen2TestBase {
     private SharedKeyUtils utils;
 
     @BeforeEach
-    void setUp() throws Exception {
-        utils = new SharedKeyUtils(accountName, accountKey);
+    protected void setUp() {
+        super.setUp();
+        try {
+            utils = new SharedKeyUtils(accountName, accountKey);
+        } catch (InvalidKeyException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @AfterEach
