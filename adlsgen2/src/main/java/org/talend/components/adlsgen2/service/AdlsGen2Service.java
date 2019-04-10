@@ -1,15 +1,15 @@
-// ============================================================================
-//
-// Copyright (C) 2006-2019 Talend Inc. - www.talend.com
-//
-// This source code is available under agreement available at
-// %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
-//
-// You should have received a copy of the agreement
-// along with this program; if not, write to Talend SA
-// 9 rue Pages 92150 Suresnes, France
-//
-// ============================================================================
+/*
+ * Copyright (C) 2006-2019 Talend Inc. - www.talend.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package org.talend.components.adlsgen2.service;
 
 import java.io.InputStream;
@@ -32,6 +32,7 @@ import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 
+import org.talend.components.adlsgen2.common.format.avro.AvroIterator;
 import org.talend.components.adlsgen2.common.format.csv.CsvIterator;
 import org.talend.components.adlsgen2.common.format.parquet.ParquetIterator;
 import org.talend.components.adlsgen2.common.format.unknown.UnknownIterator;
@@ -157,20 +158,19 @@ public class AdlsGen2Service implements Serializable {
     }
 
     public Iterator<Record> convertToRecordList(@Configuration("dataSet") final AdlsGen2DataSet dataSet, InputStream content) {
-        log.warn("[convertToRecordList] type: {}", content.getClass().getName());
         switch (dataSet.getFormat()) {
         case CSV:
             return CsvIterator.Builder.of().withConfiguration(dataSet.getCsvConfiguration()).parse(content);
         case AVRO:
+            return AvroIterator.Builder.of().withConfiguration(dataSet.getAvroConfiguration()).parse(content);
         case JSON:
             throw new IllegalArgumentException("Not implemented");
         case PARQUET:
-            log.warn("[convertToRecordList] PARQUET");
             return ParquetIterator.Builder.of().withConfiguration(dataSet.getParquetConfiguration()).parse(content);
         case UNKNOWN:
             return UnknownIterator.Builder.of().withConfiguration(dataSet.getUnknownConfiguration()).parse(content);
         }
-        return null;
+        throw new IllegalStateException("Could not determine operation to do.");
     }
 
     @SuppressWarnings("unchecked")
