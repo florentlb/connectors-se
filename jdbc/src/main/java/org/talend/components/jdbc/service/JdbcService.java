@@ -74,6 +74,8 @@ public class JdbcService {
     }
 
     /**
+     *
+     * @param query the query to check
      * @return return false if the sql query is not a read only query, true otherwise
      */
     public boolean isNotReadOnlySQLQuery(final String query) {
@@ -110,13 +112,11 @@ public class JdbcService {
     }
 
     public JdbcDatasource createDataSource(final JdbcConnection connection) {
-        final JdbcConfiguration.Driver driver = getDriver(connection);
-        return new JdbcDatasource(i18n, resolver, connection, driver, false, false);
+        return new JdbcDatasource(i18n, resolver, connection, getDriver(connection), false, false);
     }
 
     public JdbcDatasource createDataSource(final JdbcConnection connection, final boolean rewriteBatchedStatements) {
-        final JdbcConfiguration.Driver driver = getDriver(connection);
-        return new JdbcDatasource(i18n, resolver, connection, driver, false, rewriteBatchedStatements);
+        return new JdbcDatasource(i18n, resolver, connection, getDriver(connection), false, rewriteBatchedStatements);
     }
 
     public static class JdbcDatasource implements AutoCloseable {
@@ -125,7 +125,7 @@ public class JdbcService {
 
         private HikariDataSource dataSource;
 
-        JdbcDatasource(final I18nMessage i18nMessage, final Resolver resolver, final JdbcConnection connection,
+        public JdbcDatasource(final I18nMessage i18nMessage, final Resolver resolver, final JdbcConnection connection,
                 final JdbcConfiguration.Driver driver, final boolean isAutoCommit, final boolean rewriteBatchedStatements) {
             final Thread thread = Thread.currentThread();
             final ClassLoader prev = thread.getContextClassLoader();
