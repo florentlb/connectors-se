@@ -12,9 +12,6 @@
 // ============================================================================
 package org.talend.components.marketo.output;
 
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_REASONS;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_RESULT;
-
 import javax.annotation.PostConstruct;
 import javax.json.JsonObject;
 
@@ -31,6 +28,9 @@ import org.talend.sdk.component.api.processor.ElementListener;
 import org.talend.sdk.component.api.processor.Input;
 import org.talend.sdk.component.api.processor.Processor;
 import org.talend.sdk.component.api.record.Record;
+
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_REASONS;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_RESULT;
 
 @Version
 @Processor(family = "Marketo", name = "Output")
@@ -53,19 +53,20 @@ public class MarketoProcessor extends MarketoSourceOrProcessor {
         case Lead:
             strategy = new LeadStrategy(configuration, service);
             break;
-        case List:
-            strategy = new ListStrategy(configuration, service);
-            break;
-        case CustomObject:
-            strategy = new CustomObjectStrategy(configuration, service);
-            break;
-        case Company:
-            strategy = new CompanyStrategy(configuration, service);
-            break;
-        case Opportunity:
-        case OpportunityRole:
-            strategy = new OpportunityStrategy(configuration, service);
-            break;
+        // TODO reenable after
+        // case List:
+        // strategy = new ListStrategy(configuration, service);
+        // break;
+        // case CustomObject:
+        // strategy = new CustomObjectStrategy(configuration, service);
+        // break;
+        // case Company:
+        // strategy = new CompanyStrategy(configuration, service);
+        // break;
+        // case Opportunity:
+        // case OpportunityRole:
+        // strategy = new OpportunityStrategy(configuration, service);
+        // break;
         }
     }
 

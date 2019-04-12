@@ -12,12 +12,6 @@
 // ============================================================================
 package org.talend.components.marketo.service;
 
-import static org.slf4j.LoggerFactory.getLogger;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACCESS_TOKEN;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_ID;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_NAME;
-import static org.talend.components.marketo.service.AuthorizationClient.CLIENT_CREDENTIALS;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -42,6 +36,12 @@ import org.talend.sdk.component.api.service.completion.Suggestions;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheck;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus;
 import org.talend.sdk.component.api.service.http.Response;
+
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACCESS_TOKEN;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_ID;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_NAME;
+import static org.talend.components.marketo.service.AuthorizationClient.CLIENT_CREDENTIALS;
 
 @Service
 public class UIActionService extends MarketoService {
@@ -205,7 +205,7 @@ public class UIActionService extends MarketoService {
     @Suggestions(FIELD_NAMES)
     public SuggestionValues getFieldNames(@Option final MarketoDataSet dataSet) {
         final String entity = dataSet.getEntity().name();
-        final String customObjectName = dataSet.getCustomObjectName();
+        final String customObjectName = "";
         LOG.debug("[getFieldNames] datastore:{}; entity: {}; customObjectName: {}.", dataSet.getDataStore(), entity,
                 customObjectName);
         try {

@@ -77,16 +77,17 @@ public class MarketoInputMapper implements Serializable {
         switch (configuration.getDataSet().getEntity()) {
         case Lead:
             return new LeadSource(configuration, service);
-        case List:
-            return new ListSource(configuration, service);
-        case CustomObject:
-            return new CustomObjectSource(configuration, service);
-        case Company:
-            return new CompanySource(configuration, service);
-        case Opportunity:
-        case OpportunityRole:
-            return new OpportunitySource(configuration, service);
-        }
+        // TODO reenable after
+        // case List:
+        // return new ListSource(configuration, service);
+        // case CustomObject:
+        // return new CustomObjectSource(configuration, service);
+        // case Company:
+        // return new CompanySource(configuration, service);
+        // case Opportunity:
+        // case OpportunityRole:
+        // return new OpportunitySource(configuration, service);
+        } //
         throw new IllegalArgumentException(service.getI18n().invalidOperation());
     }
 

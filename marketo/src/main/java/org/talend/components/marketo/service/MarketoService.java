@@ -12,6 +12,35 @@
 // ============================================================================
 package org.talend.components.marketo.service;
 
+import java.io.StringReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.json.JsonArray;
+import javax.json.JsonBuilderFactory;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonReaderFactory;
+import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
+import javax.json.JsonWriterFactory;
+
+import org.slf4j.Logger;
+import org.talend.components.marketo.dataset.MarketoDataSet.MarketoEntity;
+import org.talend.components.marketo.dataset.MarketoInputConfiguration;
+import org.talend.components.marketo.datastore.MarketoDataStore;
+import org.talend.sdk.component.api.record.Record;
+import org.talend.sdk.component.api.record.Schema;
+import org.talend.sdk.component.api.record.Schema.Builder;
+import org.talend.sdk.component.api.record.Schema.Entry;
+import org.talend.sdk.component.api.record.Schema.Type;
+import org.talend.sdk.component.api.service.Service;
+import org.talend.sdk.component.api.service.http.Response;
+import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
+
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -36,35 +65,6 @@ import static org.talend.components.marketo.MarketoApiConstants.ATTR_SEQ;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_STATUS;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_UPDATED_AT;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_WORKSPACE_NAME;
-
-import java.io.StringReader;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import javax.json.JsonArray;
-import javax.json.JsonBuilderFactory;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonReaderFactory;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
-import javax.json.JsonWriterFactory;
-
-import org.slf4j.Logger;
-import org.talend.components.marketo.dataset.MarketoDataSet.MarketoEntity;
-import org.talend.components.marketo.dataset.MarketoInputConfiguration;
-import org.talend.components.marketo.dataset.MarketoInputConfiguration.ListAction;
-import org.talend.components.marketo.datastore.MarketoDataStore;
-import org.talend.sdk.component.api.record.Record;
-import org.talend.sdk.component.api.record.Schema;
-import org.talend.sdk.component.api.record.Schema.Builder;
-import org.talend.sdk.component.api.record.Schema.Entry;
-import org.talend.sdk.component.api.record.Schema.Type;
-import org.talend.sdk.component.api.service.Service;
-import org.talend.sdk.component.api.service.http.Response;
-import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 
 @Accessors
 @Service
@@ -150,9 +150,7 @@ public class MarketoService {
 
     public Schema getEntitySchema(final MarketoInputConfiguration configuration) {
         LOG.debug("[getEntitySchema] {} ", configuration);
-        return getEntitySchema(configuration.getDataSet().getDataStore(), configuration.getDataSet().getEntity().name(),
-                configuration.getDataSet().getCustomObjectName(),
-                configuration.getListAction() == null ? "" : configuration.getListAction().name());
+        return getEntitySchema(configuration.getDataSet().getDataStore(), configuration.getDataSet().getEntity().name(), "", "");
     }
 
     public Schema getEntitySchema(final MarketoDataStore dataStore, final String entity, final String customObjectName,
@@ -166,29 +164,29 @@ public class MarketoService {
             case Lead:
                 entitySchema = parseResultFromResponse(leadClient.describeLead(accessToken));
                 return mergeSchemas(getSchemaForEntity(entitySchema), getLeadChangesAndActivitiesSchema());
-            case List:
-                if (ListAction.getLeads.name().equals(listAction)) {
-                    entitySchema = parseResultFromResponse(leadClient.describeLead(accessToken));
-                } else {
-                    return getInputSchema(MarketoEntity.List, listAction);
-                }
-                break;
-            case CustomObject:
-                entitySchema = parseResultFromResponse(customObjectClient.describeCustomObjects(accessToken, customObjectName))
-                        .get(0).asJsonObject().getJsonArray(ATTR_FIELDS);
-                break;
-            case Company:
-                entitySchema = parseResultFromResponse(companyClient.describeCompanies(accessToken)).get(0).asJsonObject()
-                        .getJsonArray(ATTR_FIELDS);
-                break;
-            case Opportunity:
-                entitySchema = parseResultFromResponse(opportunityClient.describeOpportunity(accessToken)).get(0).asJsonObject()
-                        .getJsonArray(ATTR_FIELDS);
-                break;
-            case OpportunityRole:
-                entitySchema = parseResultFromResponse(opportunityClient.describeOpportunityRole(accessToken)).get(0)
-                        .asJsonObject().getJsonArray(ATTR_FIELDS);
-                break;
+            // case List:
+            // if (ListAction.getLeads.name().equals(listAction)) {
+            // entitySchema = parseResultFromResponse(leadClient.describeLead(accessToken));
+            // } else {
+            // return getInputSchema(MarketoEntity.List, listAction);
+            // }
+            // break;
+            // case CustomObject:
+            // entitySchema = parseResultFromResponse(customObjectClient.describeCustomObjects(accessToken, customObjectName))
+            // .get(0).asJsonObject().getJsonArray(ATTR_FIELDS);
+            // break;
+            // case Company:
+            // entitySchema = parseResultFromResponse(companyClient.describeCompanies(accessToken)).get(0).asJsonObject()
+            // .getJsonArray(ATTR_FIELDS);
+            // break;
+            // case Opportunity:
+            // entitySchema = parseResultFromResponse(opportunityClient.describeOpportunity(accessToken)).get(0).asJsonObject()
+            // .getJsonArray(ATTR_FIELDS);
+            // break;
+            // case OpportunityRole:
+            // entitySchema = parseResultFromResponse(opportunityClient.describeOpportunityRole(accessToken)).get(0)
+            // .asJsonObject().getJsonArray(ATTR_FIELDS);
+            // break;
             }
             LOG.debug("[getEntitySchema] entitySchema: {}.", entitySchema);
             return getSchemaForEntity(entitySchema);
@@ -273,7 +271,7 @@ public class MarketoService {
     public Schema getInputSchema(MarketoEntity entity, String action) {
         switch (entity) {
         case Lead:
-        case List:
+            // case List:
             switch (action) {
             case "isMemberOfList":
                 return getLeadListDefaultSchema();
@@ -283,11 +281,12 @@ public class MarketoService {
             default:
                 return getLeadListDefaultSchema();
             }
-        case CustomObject:
-        case Company:
-        case Opportunity:
-        case OpportunityRole:
-            return getCustomObjectDefaultSchema();
+            // TODO reenable after
+            // case CustomObject:
+            // case Company:
+            // case Opportunity:
+            // case OpportunityRole:
+            // return getCustomObjectDefaultSchema();
         }
         return null;
     }

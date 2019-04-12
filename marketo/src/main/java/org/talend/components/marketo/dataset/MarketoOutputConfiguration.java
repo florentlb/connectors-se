@@ -12,29 +12,26 @@
 // ============================================================================
 package org.talend.components.marketo.dataset;
 
-import lombok.Data;
-import lombok.ToString;
-
-import static org.talend.components.marketo.service.UIActionService.FIELD_NAMES;
-
 import java.io.Serializable;
 
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.Suggestable;
 import org.talend.sdk.component.api.configuration.condition.ActiveIf;
-import org.talend.sdk.component.api.configuration.constraint.Required;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
+
+import lombok.Data;
+import lombok.ToString;
+
+import static org.talend.components.marketo.service.UIActionService.FIELD_NAMES;
 
 @Data
 @GridLayout({ //
         @GridLayout.Row({ "dataSet" }), //
         @GridLayout.Row({ "action" }), //
-        @GridLayout.Row({ "listAction" }), //
         @GridLayout.Row({ "syncMethod" }), //
         @GridLayout.Row({ "lookupField" }), //
         @GridLayout.Row({ "dedupeBy" }), //
-        @GridLayout.Row({ "deleteBy" }), //
 }) //
 @Documentation("Marketo Sink Configuration")
 @ToString(callSuper = true)
@@ -68,12 +65,10 @@ public class MarketoOutputConfiguration implements Serializable {
      * DataSet
      */
     @Option
-    @Required
     @Documentation("Marketo DataSet")
     private MarketoDataSet dataSet;
 
     @Option
-    @ActiveIf(target = "../dataSet/entity", value = { "Lead", "CustomObject", "Company", "Opportunity", "OpportunityRole" })
     @Documentation("Action")
     private OutputAction action;
 
@@ -81,25 +76,15 @@ public class MarketoOutputConfiguration implements Serializable {
      * Lead Entity
      */
     @Option
-    @ActiveIf(target = "../dataSet/entity", value = "Lead")
     @ActiveIf(target = "action", value = "sync")
     @Suggestable(value = FIELD_NAMES, parameters = { "../dataSet" })
     @Documentation("Lookup Field")
     private String lookupField;
 
     /*
-     * List Entity
-     */
-    @Option
-    @ActiveIf(target = "../dataSet/entity", value = { "List" })
-    @Documentation("List Action")
-    private ListAction listAction;
-
-    /*
      * All entities
      */
     @Option
-    @ActiveIf(target = "../dataSet/entity", value = { "Lead", "CustomObject", "Company", "Opportunity", "OpportunityRole" })
     @ActiveIf(target = "action", value = { "sync" })
     @Documentation("Synchronization method")
     private SyncMethod syncMethod;
@@ -109,11 +94,5 @@ public class MarketoOutputConfiguration implements Serializable {
     @ActiveIf(target = "syncMethod", value = { "updateOnly" })
     @Documentation("Dedupe by")
     private String dedupeBy;
-
-    @Option
-    @ActiveIf(target = "../dataSet/entity", value = { "CustomObject", "Company", "Opportunity", "OpportunityRole" })
-    @ActiveIf(target = "action", value = { "delete" })
-    @Documentation("Field to delete company records by. Key may be dedupeFields or idField")
-    private DeleteBy deleteBy;
 
 }

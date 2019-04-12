@@ -12,14 +12,6 @@
 // ============================================================================
 package org.talend.components.marketo.input;
 
-import static org.slf4j.LoggerFactory.getLogger;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_FIELDS;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_FILTER_TYPE;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_INPUT;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_MORE_RESULT;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_NEXT_PAGE_TOKEN;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_RESULT;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,10 +24,8 @@ import javax.json.JsonValue;
 
 import org.slf4j.Logger;
 import org.talend.components.marketo.MarketoSourceOrProcessor;
-import org.talend.components.marketo.dataset.CompoundKey;
 import org.talend.components.marketo.dataset.MarketoInputConfiguration;
 import org.talend.components.marketo.service.MarketoService;
-
 import org.talend.sdk.component.api.component.Icon;
 import org.talend.sdk.component.api.component.Version;
 import org.talend.sdk.component.api.configuration.Option;
@@ -44,6 +34,14 @@ import org.talend.sdk.component.api.meta.Documentation;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.record.Schema.Entry;
+
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_FIELDS;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_FILTER_TYPE;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_INPUT;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_MORE_RESULT;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_NEXT_PAGE_TOKEN;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_RESULT;
 
 @Version
 @Icon(value = Icon.IconType.CUSTOM, custom = "MarketoInput")
@@ -89,6 +87,9 @@ public abstract class MarketoSource extends MarketoSourceOrProcessor {
     @Producer
     public Record next() {
         JsonValue next = null;
+        if (resultIterator == null) {
+            return null;
+        }
         boolean hasNext = resultIterator.hasNext();
         if (hasNext) {
             next = resultIterator.next();
@@ -102,6 +103,7 @@ public abstract class MarketoSource extends MarketoSourceOrProcessor {
     public void processBatch() {
         JsonObject result = runAction();
         nextPageToken = result.getString(ATTR_NEXT_PAGE_TOKEN, null);
+        LOG.warn("[processBatch] resukt {}", result);
         JsonArray requestResult = result.getJsonArray(ATTR_RESULT);
         Boolean hasMore = result.getBoolean(ATTR_MORE_RESULT, true);
         if (!hasMore && requestResult != null) {
@@ -125,9 +127,6 @@ public abstract class MarketoSource extends MarketoSourceOrProcessor {
 
     protected JsonObject generateCompoundKeyPayload(String filterType, String fields) {
         Map<String, Object> ck = new HashMap<>();
-        for (CompoundKey p : configuration.getCompoundKey()) {
-            ck.put(p.getKey(), p.getValue());
-        }
         JsonArray input = jsonFactory.createArrayBuilder().add(jsonFactory.createObjectBuilder(ck).build()).build();
         JsonArray jfields = jsonFactory.createArrayBuilder(Arrays.asList(fields.split(","))).build();
         JsonObject payload = jsonFactory.createObjectBuilder()//
