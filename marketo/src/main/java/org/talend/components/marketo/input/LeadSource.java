@@ -12,6 +12,14 @@
 // ============================================================================
 package org.talend.components.marketo.input;
 
+import javax.json.JsonObject;
+
+import org.slf4j.Logger;
+import org.talend.components.marketo.dataset.MarketoInputConfiguration;
+import org.talend.components.marketo.service.LeadClient;
+import org.talend.components.marketo.service.MarketoService;
+import org.talend.sdk.component.api.configuration.Option;
+
 import static java.util.stream.Collectors.joining;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACCESS_TOKEN;
@@ -21,16 +29,6 @@ import static org.talend.components.marketo.MarketoApiConstants.ATTR_FILTER_VALU
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_NEXT_PAGE_TOKEN;
 import static org.talend.components.marketo.MarketoApiConstants.HEADER_CONTENT_TYPE_APPLICATION_X_WWW_FORM_URLENCODED;
 import static org.talend.components.marketo.MarketoApiConstants.REQUEST_PARAM_QUERY_METHOD_GET;
-
-import javax.json.JsonObject;
-
-import org.slf4j.Logger;
-import org.talend.components.marketo.dataset.MarketoInputConfiguration;
-import org.talend.components.marketo.service.LeadClient;
-import org.talend.components.marketo.service.MarketoService;
-
-import org.talend.sdk.component.api.configuration.Option;
-import org.talend.sdk.component.api.service.http.Response;
 
 public class LeadSource extends MarketoSource {
 
@@ -114,9 +112,7 @@ public class LeadSource extends MarketoSource {
     private JsonObject getLeadActivities() {
         String sinceDateTime = getPagingToken(configuration.getSinceDateTime());
         String activityTypeIds = "";
-        if (configuration.getActivityTypeIds().isEmpty()) {
-
-        } else {
+        if (!configuration.getActivityTypeIds().isEmpty()) {
             activityTypeIds = configuration.getActivityTypeIds().stream().collect(joining(","));
         }
         String assetIds = configuration.getAssetIds();
@@ -141,8 +137,7 @@ public class LeadSource extends MarketoSource {
     }
 
     public String getPagingToken(String dateTime) {
-        Response<JsonObject> pt = leadClient.getPagingToken(accessToken, dateTime);
-        return pt.body().getString(ATTR_NEXT_PAGE_TOKEN);
+        return handleResponse(leadClient.getPagingToken(accessToken, dateTime)).getString(ATTR_NEXT_PAGE_TOKEN);
     }
 
 }

@@ -29,6 +29,7 @@ import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriterFactory;
 
 import org.slf4j.Logger;
+import org.talend.components.marketo.dataset.MarketoDataSet;
 import org.talend.components.marketo.dataset.MarketoDataSet.MarketoEntity;
 import org.talend.components.marketo.dataset.MarketoInputConfiguration;
 import org.talend.components.marketo.datastore.MarketoDataStore;
@@ -38,6 +39,7 @@ import org.talend.sdk.component.api.record.Schema.Builder;
 import org.talend.sdk.component.api.record.Schema.Entry;
 import org.talend.sdk.component.api.record.Schema.Type;
 import org.talend.sdk.component.api.service.Service;
+import org.talend.sdk.component.api.service.configuration.Configuration;
 import org.talend.sdk.component.api.service.http.Response;
 import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 
@@ -47,6 +49,7 @@ import lombok.experimental.Accessors;
 import static java.util.stream.Collectors.joining;
 import static javax.json.JsonValue.ValueType.NULL;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACCESS_TOKEN;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACTIVITY_DATE;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACTIVITY_TYPE_ID;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ATTRIBUTES;
@@ -65,6 +68,7 @@ import static org.talend.components.marketo.MarketoApiConstants.ATTR_SEQ;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_STATUS;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_UPDATED_AT;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_WORKSPACE_NAME;
+import static org.talend.components.marketo.service.AuthorizationClient.CLIENT_CREDENTIALS;
 
 @Accessors
 @Service
@@ -125,6 +129,22 @@ public class MarketoService {
         customObjectClient.base(dataStore.getEndpoint());
         companyClient.base(dataStore.getEndpoint());
         opportunityClient.base(dataStore.getEndpoint());
+    }
+
+    /**
+     * Retrieve an set an access token for using API
+     */
+    public String retrieveAccessToken(@Configuration("dataSet") final MarketoDataSet dataSet) {
+        Response<JsonObject> result = authorizationClient.getAuthorizationToken(CLIENT_CREDENTIALS,
+                dataSet.getDataStore().getClientId(), dataSet.getDataStore().getClientSecret());
+        LOG.debug("[retrieveAccessToken] [{}] : {}.", result.status(), result.body());
+        if (result.status() == 200) {
+            return result.body().getString(ATTR_ACCESS_TOKEN);
+        } else {
+            String error = i18n.accessTokenRetrievalError(result.status(), result.headers().toString());
+            LOG.error("[retrieveAccessToken] {}", error);
+            throw new RuntimeException(error);
+        }
     }
 
     public String getFieldsFromDescribeFormatedForApi(JsonArray fields) {

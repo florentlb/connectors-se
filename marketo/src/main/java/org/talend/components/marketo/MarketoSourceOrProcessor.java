@@ -12,14 +12,6 @@
 // ============================================================================
 package org.talend.components.marketo;
 
-import static org.slf4j.LoggerFactory.getLogger;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACCESS_TOKEN;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_CODE;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_ERRORS;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_MESSAGE;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_SUCCESS;
-import static org.talend.components.marketo.service.AuthorizationClient.CLIENT_CREDENTIALS;
-
 import java.io.Serializable;
 
 import javax.annotation.PostConstruct;
@@ -31,20 +23,22 @@ import javax.json.JsonWriterFactory;
 
 import org.slf4j.Logger;
 import org.talend.components.marketo.dataset.MarketoDataSet;
-import org.talend.components.marketo.service.AuthorizationClient;
 import org.talend.components.marketo.service.I18nMessage;
 import org.talend.components.marketo.service.MarketoService;
-
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.service.http.Response;
+
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_CODE;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_ERRORS;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_MESSAGE;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_SUCCESS;
 
 public class MarketoSourceOrProcessor implements Serializable {
 
     protected final MarketoService marketoService;
 
     protected final I18nMessage i18n;
-
-    protected final AuthorizationClient authorizationClient;
 
     protected final JsonBuilderFactory jsonFactory;
 
@@ -68,37 +62,12 @@ public class MarketoSourceOrProcessor implements Serializable {
         this.jsonReader = service.getJsonReader();
         this.jsonWriter = service.getJsonWriter();
         this.marketoService = service;
-        this.authorizationClient = service.getAuthorizationClient();
-        this.authorizationClient.base(this.dataSet.getDataStore().getEndpoint());
     }
 
     @PostConstruct
     public void init() {
         nextPageToken = null;
-        retrieveAccessToken();
-    }
-
-    public String getAccessToken() {
-        if (accessToken == null) {
-            retrieveAccessToken();
-        }
-        return accessToken;
-    }
-
-    /**
-     * Retrieve an set an access token for using API
-     */
-    public void retrieveAccessToken() {
-        Response<JsonObject> result = authorizationClient.getAuthorizationToken(CLIENT_CREDENTIALS,
-                dataSet.getDataStore().getClientId(), dataSet.getDataStore().getClientSecret());
-        LOG.debug("[retrieveAccessToken] [{}] : {}.", result.status(), result.body());
-        if (result.status() == 200) {
-            accessToken = result.body().getString(ATTR_ACCESS_TOKEN);
-        } else {
-            String error = i18n.accessTokenRetrievalError(result.status(), result.headers().toString());
-            LOG.error("[retrieveAccessToken] {}", error);
-            throw new RuntimeException(error);
-        }
+        accessToken = marketoService.retrieveAccessToken(dataSet);
     }
 
     /**
