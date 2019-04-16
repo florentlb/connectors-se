@@ -12,16 +12,18 @@
 // ============================================================================
 package org.talend.components.marketo.input;
 
+import java.util.EnumMap;
+import java.util.function.Supplier;
+
 import javax.json.JsonObject;
 
-import org.slf4j.Logger;
 import org.talend.components.marketo.dataset.MarketoInputConfiguration;
+import org.talend.components.marketo.dataset.MarketoInputConfiguration.LeadAction;
 import org.talend.components.marketo.service.LeadClient;
 import org.talend.components.marketo.service.MarketoService;
 import org.talend.sdk.component.api.configuration.Option;
 
 import static java.util.stream.Collectors.joining;
-import static org.slf4j.LoggerFactory.getLogger;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACCESS_TOKEN;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_FIELDS;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_FILTER_TYPE;
@@ -34,32 +36,26 @@ public class LeadSource extends MarketoSource {
 
     private final LeadClient leadClient;
 
-    private transient static final Logger LOG = getLogger(LeadSource.class);
+    private transient EnumMap<LeadAction, Supplier<JsonObject>> action = new EnumMap<~>();
 
     public LeadSource(@Option("configuration") final MarketoInputConfiguration configuration, //
             final MarketoService service) {
         super(configuration, service);
         this.leadClient = service.getLeadClient();
         this.leadClient.base(this.configuration.getDataSet().getDataStore().getEndpoint());
+        action.put(LeadAction.getLead, this::getLead);
+        action.put(LeadAction.getMultipleLeads, this::getMultipleLeads);
+        action.put(LeadAction.getLeadActivity, this::getLeadActivities);
+        action.put(LeadAction.getLeadChanges, this::getLeadChanges);
     }
 
     @Override
     public JsonObject runAction() {
-        switch (configuration.getLeadAction()) {
-        case getLead:
-            return getLead();
-        case getMultipleLeads:
-            return getMultipleLeads();
-        case getLeadActivity:
-            return getLeadActivities();
-        case getLeadChanges:
-            return getLeadChanges();
+        Supplier<JsonObject> meth = action.get(configuration.getLeadAction());
+        if (meth == null) {
+            throw new IllegalArgumentException(i18n.invalidOperation());
         }
-        throw new RuntimeException(i18n.invalidOperation());
-    }
-
-    private JsonObject describeLead() {
-        return handleResponse(leadClient.describeLead(accessToken));
+        return meth.get();
     }
 
     private JsonObject getLead() {
