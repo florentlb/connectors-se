@@ -33,7 +33,7 @@ class UnknownConverterTest extends AdlsGen2TestBase {
     private String content = "Another content with no meaning...";
 
     @BeforeEach
-    protected void setUp() {
+    protected void setUp()throws Exception {
         super.setUp();
         converter = UnknownConverter.of();
         schema = recordBuilderFactory.newSchemaBuilder(Type.RECORD)

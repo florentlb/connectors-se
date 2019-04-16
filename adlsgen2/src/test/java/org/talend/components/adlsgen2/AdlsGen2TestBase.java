@@ -26,6 +26,7 @@ import org.talend.components.adlsgen2.common.format.csv.CsvConfiguration;
 import org.talend.components.adlsgen2.common.format.csv.CsvConverter;
 import org.talend.components.adlsgen2.common.format.csv.CsvFieldDelimiter;
 import org.talend.components.adlsgen2.common.format.csv.CsvRecordSeparator;
+import org.talend.components.adlsgen2.common.format.json.JsonConverter;
 import org.talend.components.adlsgen2.common.format.parquet.ParquetConverter;
 import org.talend.components.adlsgen2.common.format.unknown.UnknownConverter;
 import org.talend.components.adlsgen2.dataset.AdlsGen2DataSet;
@@ -127,7 +128,7 @@ public class AdlsGen2TestBase implements Serializable {
     protected String tmpDir;
 
     @BeforeEach
-    protected void setUp() {
+    protected void setUp() throws Exception {
         tmpDir = System.getProperty("java.io.tmpdir", ".") + "/";
 
         service = new AdlsGen2Service();
@@ -189,6 +190,7 @@ public class AdlsGen2TestBase implements Serializable {
         CsvConverter.recordBuilderFactory = svcRcdBld;
         AvroConverter.recordBuilderFactory = svcRcdBld;
         AvroConverter.i18n = i18;
+        JsonConverter.recordBuilderFactory =svcRcdBld;
         ParquetConverter.recordBuilderFactory = svcRcdBld;
         UnknownConverter.recordBuilderFactory = svcRcdBld;
     }

@@ -41,7 +41,7 @@ class AvroConverterTest extends AdlsGen2TestBase {
     private GenericRecord avro;
 
     @BeforeEach
-    protected void setUp() {
+    protected void setUp() throws Exception {
         super.setUp();
 
         avro = new GenericData.Record( //
