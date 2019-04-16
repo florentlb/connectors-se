@@ -21,6 +21,7 @@ import org.talend.components.marketo.MarketoSourceOrProcessor;
 import org.talend.components.marketo.dataset.MarketoOutputConfiguration;
 import org.talend.components.marketo.service.MarketoService;
 import org.talend.sdk.component.api.component.Icon;
+import org.talend.sdk.component.api.component.Icon.IconType;
 import org.talend.sdk.component.api.component.Version;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.meta.Documentation;
@@ -34,7 +35,7 @@ import static org.talend.components.marketo.MarketoApiConstants.ATTR_RESULT;
 
 @Version
 @Processor(family = "Marketo", name = "Output")
-@Icon(value = Icon.IconType.CUSTOM, custom = "MarketoOutput")
+@Icon(value = IconType.MARKETO)
 @Documentation("Marketo Output Component")
 public class MarketoProcessor extends MarketoSourceOrProcessor {
 
