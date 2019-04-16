@@ -23,7 +23,7 @@ import org.talend.sdk.component.api.meta.Documentation;
 import lombok.Data;
 import lombok.ToString;
 
-import static org.talend.components.marketo.service.UIActionService.FIELD_NAMES;
+import static org.talend.components.marketo.service.UIActionService.LEAD_KEY_NAME_LIST;
 
 @Data
 @GridLayout({ //
@@ -77,7 +77,7 @@ public class MarketoOutputConfiguration implements Serializable {
      */
     @Option
     @ActiveIf(target = "action", value = "sync")
-    @Suggestable(value = FIELD_NAMES, parameters = { "../dataSet" })
+    @Suggestable(value = LEAD_KEY_NAME_LIST)
     @Documentation("Lookup Field")
     private String lookupField;
 
