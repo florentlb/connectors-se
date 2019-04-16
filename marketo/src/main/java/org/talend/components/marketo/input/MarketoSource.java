@@ -12,7 +12,6 @@
 // ============================================================================
 package org.talend.components.marketo.input;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -36,9 +35,6 @@ import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.record.Schema.Entry;
 
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_FIELDS;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_FILTER_TYPE;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_INPUT;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_MORE_RESULT;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_NEXT_PAGE_TOKEN;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_RESULT;
@@ -103,7 +99,7 @@ public abstract class MarketoSource extends MarketoSourceOrProcessor {
     public void processBatch() {
         JsonObject result = runAction();
         nextPageToken = result.getString(ATTR_NEXT_PAGE_TOKEN, null);
-        LOG.warn("[processBatch] resukt {}", result);
+        LOG.warn("[processBatch] result {}", result);
         JsonArray requestResult = result.getJsonArray(ATTR_RESULT);
         Boolean hasMore = result.getBoolean(ATTR_MORE_RESULT, true);
         if (!hasMore && requestResult != null) {
@@ -124,18 +120,5 @@ public abstract class MarketoSource extends MarketoSourceOrProcessor {
     }
 
     public abstract JsonObject runAction();
-
-    protected JsonObject generateCompoundKeyPayload(String filterType, String fields) {
-        Map<String, Object> ck = new HashMap<>();
-        JsonArray input = jsonFactory.createArrayBuilder().add(jsonFactory.createObjectBuilder(ck).build()).build();
-        JsonArray jfields = jsonFactory.createArrayBuilder(Arrays.asList(fields.split(","))).build();
-        JsonObject payload = jsonFactory.createObjectBuilder()//
-                .add(ATTR_FILTER_TYPE, filterType) //
-                .add(ATTR_FIELDS, jfields) //
-                .add(ATTR_INPUT, input) //
-                .build();
-        LOG.debug("[generateCompoundKeyPayload] payload: {}.", payload);
-        return payload;
-    }
 
 }
