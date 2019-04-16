@@ -31,7 +31,6 @@ import static org.talend.components.marketo.service.UIActionService.LEAD_KEY_NAM
         @GridLayout.Row({ "action" }), //
         @GridLayout.Row({ "syncMethod" }), //
         @GridLayout.Row({ "lookupField" }), //
-        @GridLayout.Row({ "dedupeBy" }), //
 }) //
 @Documentation("Marketo Sink Configuration")
 @ToString(callSuper = true)
@@ -88,11 +87,5 @@ public class MarketoOutputConfiguration implements Serializable {
     @ActiveIf(target = "action", value = { "sync" })
     @Documentation("Synchronization method")
     private SyncMethod syncMethod;
-
-    @Option
-    @ActiveIf(target = "action", value = { "sync" })
-    @ActiveIf(target = "syncMethod", value = { "updateOnly" })
-    @Documentation("Dedupe by")
-    private String dedupeBy;
 
 }
