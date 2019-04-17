@@ -135,6 +135,7 @@ public class MarketoService {
      * Retrieve an set an access token for using API
      */
     public String retrieveAccessToken(@Configuration("dataSet") final MarketoDataSet dataSet) {
+        initClients(dataSet.getDataStore());
         Response<JsonObject> result = authorizationClient.getAuthorizationToken(CLIENT_CREDENTIALS,
                 dataSet.getDataStore().getClientId(), dataSet.getDataStore().getClientSecret());
         LOG.debug("[retrieveAccessToken] [{}] : {}.", result.status(), result.body());
