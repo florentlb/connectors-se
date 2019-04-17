@@ -36,7 +36,7 @@ public class LeadSource extends MarketoSource {
 
     private final LeadClient leadClient;
 
-    private transient EnumMap<LeadAction, Supplier<JsonObject>> action = new EnumMap<~>();
+    private transient EnumMap<LeadAction, Supplier<JsonObject>> action = new EnumMap<>(LeadAction.class);
 
     public LeadSource(@Option("configuration") final MarketoInputConfiguration configuration, //
             final MarketoService service) {
