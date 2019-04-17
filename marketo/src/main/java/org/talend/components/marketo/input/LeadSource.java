@@ -106,7 +106,9 @@ public class LeadSource extends MarketoSource {
     }
 
     private JsonObject getLeadActivities() {
-        String sinceDateTime = getPagingToken(configuration.getSinceDateTime());
+        if (nextPageToken == null) {
+            nextPageToken = getPagingToken(configuration.getSinceDateTime());
+        }
         String activityTypeIds = "";
         if (!configuration.getActivityTypeIds().isEmpty()) {
             activityTypeIds = configuration.getActivityTypeIds().stream().collect(joining(","));
@@ -115,7 +117,7 @@ public class LeadSource extends MarketoSource {
         Integer listId = configuration.getListId();
         String leadIds = configuration.getLeadIds();
         return handleResponse(
-                leadClient.getLeadActivities(accessToken, sinceDateTime, activityTypeIds, assetIds, listId, leadIds));
+                leadClient.getLeadActivities(accessToken, nextPageToken, activityTypeIds, assetIds, listId, leadIds));
     }
 
     private JsonObject getLeadChanges() {
