@@ -113,6 +113,7 @@ public class MarketoInputConfiguration implements Serializable {
 
     @Option
     @Suggestable(value = FIELD_NAMES, parameters = { "../dataSet" })
+    @ActiveIf(target = "leadAction", negate = true, value = { "getLeadActivity" })
     @Documentation("Fields")
     private List<String> fields = Arrays.asList("firstName", "lastName", "email", "company");
 
