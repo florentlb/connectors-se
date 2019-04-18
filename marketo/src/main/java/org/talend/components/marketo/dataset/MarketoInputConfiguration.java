@@ -72,7 +72,7 @@ public class MarketoInputConfiguration implements Serializable {
 
     @Option
     @ActiveIf(target = "leadAction", value = "getMultipleLeads")
-    @Suggestable(value = LEAD_KEY_NAME_LIST)
+    @Suggestable(value = LEAD_KEY_NAME_LIST, parameters = { "../dataSet/dataStore" })
     @Documentation("Key Name")
     private String leadKeyName;
 

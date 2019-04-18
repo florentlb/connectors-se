@@ -12,6 +12,15 @@
 // ============================================================================
 package org.talend.components.marketo.service;
 
+import javax.json.JsonObject;
+
+import org.talend.sdk.component.api.service.http.Header;
+import org.talend.sdk.component.api.service.http.HttpClient;
+import org.talend.sdk.component.api.service.http.Path;
+import org.talend.sdk.component.api.service.http.Query;
+import org.talend.sdk.component.api.service.http.Request;
+import org.talend.sdk.component.api.service.http.Response;
+
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACCESS_TOKEN;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_FIELDS;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_FILTER_TYPE;
@@ -23,15 +32,6 @@ import static org.talend.components.marketo.MarketoApiConstants.ATTR_NEXT_PAGE_T
 import static org.talend.components.marketo.MarketoApiConstants.HEADER_CONTENT_TYPE;
 import static org.talend.components.marketo.MarketoApiConstants.METHOD_POST;
 import static org.talend.components.marketo.MarketoApiConstants.REQUEST_PARAM_QUERY_METHOD;
-
-import javax.json.JsonObject;
-
-import org.talend.sdk.component.api.service.http.Header;
-import org.talend.sdk.component.api.service.http.HttpClient;
-import org.talend.sdk.component.api.service.http.Path;
-import org.talend.sdk.component.api.service.http.Query;
-import org.talend.sdk.component.api.service.http.Request;
-import org.talend.sdk.component.api.service.http.Response;
 
 /**
  * Client for managing Leads
@@ -49,6 +49,15 @@ public interface LeadClient extends HttpClient {
      */
     @Request(path = "/rest/v1/leads/describe.json")
     Response<JsonObject> describeLead(@Query(ATTR_ACCESS_TOKEN) String accessToken);
+
+    /**
+     * Returns metadata about lead Key Names in the target instance.
+     *
+     * @param accessToken Marketo authorization token for API
+     * @return
+     */
+    @Request(path = "/rest/v1/leads/describe2.json")
+    Response<JsonObject> describeLead2(@Query(ATTR_ACCESS_TOKEN) String accessToken);
 
     /**
      * Retrieves a single lead record through it's Marketo id.

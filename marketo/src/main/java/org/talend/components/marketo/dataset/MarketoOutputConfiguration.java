@@ -76,7 +76,7 @@ public class MarketoOutputConfiguration implements Serializable {
      */
     @Option
     @ActiveIf(target = "action", value = "sync")
-    @Suggestable(value = LEAD_KEY_NAME_LIST)
+    @Suggestable(value = LEAD_KEY_NAME_LIST, parameters = { "../dataSet/dataStore" })
     @Documentation("Lookup Field")
     private String lookupField;
 

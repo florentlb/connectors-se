@@ -17,12 +17,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.json.JsonValue;
 
 import org.slf4j.Logger;
 import org.talend.components.marketo.dataset.MarketoDataSet;
-import org.talend.components.marketo.dataset.MarketoInputConfiguration;
 import org.talend.components.marketo.datastore.MarketoDataStore;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.record.Schema;
@@ -89,22 +91,34 @@ public class UIActionService extends MarketoService {
     }
 
     @Suggestions(LEAD_KEY_NAME_LIST)
-    public SuggestionValues getLeadKeyNames(@Option final MarketoInputConfiguration dataSet) {
-        LOG.debug("[getLeadKeyNames] {}", dataSet);
-        return new SuggestionValues(true, Arrays.asList( //
-                new SuggestionValues.Item("id", "id"), //
-                new SuggestionValues.Item("cookie", "cookie"), //
-                new SuggestionValues.Item("email", "email"), //
-                new SuggestionValues.Item("twitterId", "twitterId"), //
-                new SuggestionValues.Item("facebookId", "facebookId"), //
-                new SuggestionValues.Item("linkedInId", "linkedInId"), //
-                new SuggestionValues.Item("sfdcAccountId", "sfdcAccountId"), //
-                new SuggestionValues.Item("sfdcContactId", "sfdcContactId"), //
-                new SuggestionValues.Item("sfdcLeadId", "sfdcLeadId"), //
-                new SuggestionValues.Item("sfdcLeadOwnerId", "sfdcLeadOwnerId"), //
-                new SuggestionValues.Item("sfdcOpptyId", "sfdcOpptyId"), //
-                new SuggestionValues.Item("Custom", "Custom") //
-        ));
+    public SuggestionValues suggestLeadKeyNames(@Option final MarketoDataStore dataStore) {
+        try {
+            initClients(dataStore);
+            JsonArray sf = parseResultFromResponse(leadClient.describeLead2(authorizationClient.getAccessToken(dataStore)));
+            List<String> f = sf.getJsonObject(0).getJsonArray("searchableFields").stream().map(JsonValue::asJsonArray)
+                    .map(e -> e.getString(0)).sorted().collect(Collectors.toList());
+            List<Item> fieldNames = new ArrayList<>();
+            for (String fn : f) {
+                fieldNames.add(new SuggestionValues.Item(fn, fn));
+            }
+            return new SuggestionValues(false, fieldNames);
+        } catch (Exception e) {
+            LOG.warn("[suggestLeadKeyNames] {}", e.getMessage());
+            return new SuggestionValues(true, Arrays.asList( //
+                    new SuggestionValues.Item("id", "id"), //
+                    new SuggestionValues.Item("cookies", "cookies"), //
+                    new SuggestionValues.Item("email", "email"), //
+                    new SuggestionValues.Item("twitterId", "twitterId"), //
+                    new SuggestionValues.Item("facebookId", "facebookId"), //
+                    new SuggestionValues.Item("linkedInId", "linkedInId"), //
+                    new SuggestionValues.Item("sfdcAccountId", "sfdcAccountId"), //
+                    new SuggestionValues.Item("sfdcContactId", "sfdcContactId"), //
+                    new SuggestionValues.Item("sfdcLeadId", "sfdcLeadId"), //
+                    new SuggestionValues.Item("sfdcLeadOwnerId", "sfdcLeadOwnerId"), //
+                    new SuggestionValues.Item("sfdcOpptyId", "sfdcOpptyId"), //
+                    new SuggestionValues.Item("leadPartitionId", "leadPartitionId") //
+            ));
+        }
     }
 
     @Suggestions(ACTIVITIES_LIST)
