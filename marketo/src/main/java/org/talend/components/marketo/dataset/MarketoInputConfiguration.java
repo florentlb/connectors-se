@@ -101,7 +101,7 @@ public class MarketoInputConfiguration implements Serializable {
     private String leadIds;
 
     @Option
-    @ActiveIf(target = "leadAction", value = { "getLeadChanges", "getLeadActivity" })
+    @ActiveIf(target = "leadAction", value = { "getLeadActivity" })
     @Documentation("Asset Ids (Comma-separated Asset Ids)")
     private String assetIds;
 
