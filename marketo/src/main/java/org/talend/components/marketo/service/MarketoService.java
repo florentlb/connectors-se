@@ -184,7 +184,7 @@ public class MarketoService {
             switch (MarketoEntity.valueOf(entity)) {
             case Lead:
                 entitySchema = parseResultFromResponse(leadClient.describeLead(accessToken));
-                return mergeSchemas(getSchemaForEntity(entitySchema), getLeadChangesAndActivitiesSchema());
+                return getSchemaForEntity(entitySchema);
             // case List:
             // if (ListAction.getLeads.name().equals(listAction)) {
             // entitySchema = parseResultFromResponse(leadClient.describeLead(accessToken));
