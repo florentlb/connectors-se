@@ -21,19 +21,20 @@ import javax.json.JsonObject;
 import javax.json.JsonReaderFactory;
 import javax.json.JsonWriterFactory;
 
-import org.slf4j.Logger;
 import org.talend.components.marketo.dataset.MarketoDataSet;
 import org.talend.components.marketo.service.I18nMessage;
 import org.talend.components.marketo.service.MarketoService;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.service.http.Response;
 
-import static org.slf4j.LoggerFactory.getLogger;
+import lombok.extern.slf4j.Slf4j;
+
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_CODE;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ERRORS;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_MESSAGE;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_SUCCESS;
 
+@Slf4j
 public class MarketoSourceOrProcessor implements Serializable {
 
     protected final MarketoService marketoService;
@@ -51,8 +52,6 @@ public class MarketoSourceOrProcessor implements Serializable {
     protected transient String accessToken;
 
     private MarketoDataSet dataSet;
-
-    private transient static final Logger LOG = getLogger(MarketoSourceOrProcessor.class);
 
     public MarketoSourceOrProcessor(@Option("configuration") final MarketoDataSet dataSet, //
             final MarketoService service) {
@@ -92,7 +91,7 @@ public class MarketoSourceOrProcessor implements Serializable {
      * @return Marketo API result
      */
     public JsonObject handleResponse(final Response<JsonObject> response) {
-        LOG.debug("[handleResponse] [{}] body: {}.", response.status(), response.body());
+        log.debug("[handleResponse] [{}] body: {}.", response.status(), response.body());
         if (response.status() == 200) {
             if (response.body().getBoolean(ATTR_SUCCESS)) {
                 return response.body();

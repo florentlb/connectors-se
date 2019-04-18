@@ -21,7 +21,6 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 
-import org.slf4j.Logger;
 import org.talend.components.marketo.MarketoSourceOrProcessor;
 import org.talend.components.marketo.dataset.MarketoInputConfiguration;
 import org.talend.components.marketo.service.MarketoService;
@@ -34,11 +33,13 @@ import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.record.Schema.Entry;
 
-import static org.slf4j.LoggerFactory.getLogger;
+import lombok.extern.slf4j.Slf4j;
+
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_MORE_RESULT;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_NEXT_PAGE_TOKEN;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_RESULT;
 
+@Slf4j
 @Version
 @Icon(value = Icon.IconType.CUSTOM, custom = "MarketoInput")
 @Documentation("Marketo Input Component")
@@ -50,8 +51,6 @@ public abstract class MarketoSource extends MarketoSourceOrProcessor {
 
     protected Iterator<JsonValue> resultIterator;
 
-    private transient static final Logger LOG = getLogger(MarketoSource.class);
-
     public MarketoSource(@Option("configuration") final MarketoInputConfiguration configuration, //
             final MarketoService service) {
         super(configuration.getDataSet(), service);
@@ -59,7 +58,7 @@ public abstract class MarketoSource extends MarketoSourceOrProcessor {
     }
 
     private Map<String, Entry> buildSchemaMap(final Schema entitySchema) {
-        LOG.debug("[buildSchemaMap] {}", entitySchema);
+        log.debug("[buildSchemaMap] {}", entitySchema);
         Map<String, Entry> s = new HashMap<>();
         if (entitySchema != null) {
             for (Entry entry : entitySchema.getEntries()) {
@@ -73,7 +72,7 @@ public abstract class MarketoSource extends MarketoSourceOrProcessor {
     public void init() {
         super.init();
         schema = buildSchemaMap(marketoService.getEntitySchema(configuration));
-        LOG.debug("[init] configuration {}. Master entity schema: {}.", configuration, schema);
+        log.debug("[init] configuration {}. Master entity schema: {}.", configuration, schema);
         processBatch();
     }
     /*
@@ -99,7 +98,7 @@ public abstract class MarketoSource extends MarketoSourceOrProcessor {
     public void processBatch() {
         JsonObject result = runAction();
         nextPageToken = result.getString(ATTR_NEXT_PAGE_TOKEN, null);
-        LOG.warn("[processBatch] result {}", result);
+        log.warn("[processBatch] result {}", result);
         JsonArray requestResult = result.getJsonArray(ATTR_RESULT);
         Boolean hasMore = result.getBoolean(ATTR_MORE_RESULT, true);
         if (!hasMore && requestResult != null) {
@@ -108,7 +107,7 @@ public abstract class MarketoSource extends MarketoSourceOrProcessor {
             return;
         }
         while (nextPageToken != null && requestResult == null && hasMore) {
-            LOG.debug("[processBatch] looping for valid results. {}", nextPageToken);
+            log.debug("[processBatch] looping for valid results. {}", nextPageToken);
             result = runAction();
             nextPageToken = result.getString(ATTR_NEXT_PAGE_TOKEN, null);
             requestResult = result.getJsonArray(ATTR_RESULT);

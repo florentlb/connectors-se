@@ -23,7 +23,7 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 
-import org.slf4j.Logger;
+import org.talend.components.marketo.MarketoApiConstants;
 import org.talend.components.marketo.dataset.MarketoDataSet;
 import org.talend.components.marketo.datastore.MarketoDataStore;
 import org.talend.sdk.component.api.configuration.Option;
@@ -39,12 +39,14 @@ import org.talend.sdk.component.api.service.healthcheck.HealthCheck;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus;
 import org.talend.sdk.component.api.service.http.Response;
 
-import static org.slf4j.LoggerFactory.getLogger;
+import lombok.extern.slf4j.Slf4j;
+
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACCESS_TOKEN;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ID;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_NAME;
 import static org.talend.components.marketo.service.AuthorizationClient.CLIENT_CREDENTIALS;
 
+@Slf4j
 @Service
 public class UIActionService extends MarketoService {
 
@@ -65,8 +67,6 @@ public class UIActionService extends MarketoService {
     public static final String GUESS_ENTITY_SCHEMA_INPUT = "guessEntitySchemaForInput";
 
     public static final String GUESS_ENTITY_SCHEMA_OUTPUT = "guessEntitySchemaForOutput";
-
-    private transient static final Logger LOG = getLogger(UIActionService.class);
 
     @HealthCheck(HEALTH_CHECK)
     public HealthCheckStatus doHealthCheck(@Option(MarketoDataStore.NAME) MarketoDataStore dataStore, final I18nMessage i18n) {
@@ -95,15 +95,15 @@ public class UIActionService extends MarketoService {
         try {
             initClients(dataStore);
             JsonArray sf = parseResultFromResponse(leadClient.describeLead2(authorizationClient.getAccessToken(dataStore)));
-            List<String> f = sf.getJsonObject(0).getJsonArray("searchableFields").stream().map(JsonValue::asJsonArray)
-                    .map(e -> e.getString(0)).sorted().collect(Collectors.toList());
+            List<String> f = sf.getJsonObject(0).getJsonArray(MarketoApiConstants.ATTR_SEARCHABLE_FIELDS).stream()
+                    .map(JsonValue::asJsonArray).map(e -> e.getString(0)).sorted().collect(Collectors.toList());
             List<Item> fieldNames = new ArrayList<>();
             for (String fn : f) {
                 fieldNames.add(new SuggestionValues.Item(fn, fn));
             }
             return new SuggestionValues(false, fieldNames);
         } catch (Exception e) {
-            LOG.warn("[suggestLeadKeyNames] {}", e.getMessage());
+            log.warn("[suggestLeadKeyNames] {}", e.getMessage());
             return new SuggestionValues(true, Arrays.asList( //
                     new SuggestionValues.Item("id", "id"), //
                     new SuggestionValues.Item("cookies", "cookies"), //
@@ -123,7 +123,7 @@ public class UIActionService extends MarketoService {
 
     @Suggestions(ACTIVITIES_LIST)
     public SuggestionValues getActivities(@Option final MarketoDataStore dataStore) {
-        LOG.debug("[getActivities] {}.", dataStore);
+        log.debug("[getActivities] {}.", dataStore);
         try {
             initClients(dataStore);
             String aToken = authorizationClient.getAccessToken(dataStore);
@@ -133,7 +133,7 @@ public class UIActionService extends MarketoService {
             }
             return new SuggestionValues(true, activities);
         } catch (Exception e) {
-            LOG.warn("[getActivities] Exception: {}", e.getMessage());
+            log.warn("[getActivities] Exception: {}", e.getMessage());
             return new SuggestionValues(true, Arrays.asList( //
                     new SuggestionValues.Item("1", "Visit Webpage"), //
                     new SuggestionValues.Item("2", "Fill Out Form"), //
@@ -201,7 +201,7 @@ public class UIActionService extends MarketoService {
 
     @Suggestions(LIST_NAMES)
     public SuggestionValues getListNames(@Option final MarketoDataStore dataStore) {
-        LOG.debug("[getListNames] {}.", dataStore);
+        log.debug("[getListNames] {}.", dataStore);
         try {
             initClients(dataStore);
             String aToken = authorizationClient.getAccessToken(dataStore);
@@ -220,7 +220,7 @@ public class UIActionService extends MarketoService {
     public SuggestionValues getFieldNames(@Option final MarketoDataSet dataSet) {
         final String entity = dataSet.getEntity().name();
         final String customObjectName = "";
-        LOG.debug("[getFieldNames] datastore:{}; entity: {}; customObjectName: {}.", dataSet.getDataStore(), entity,
+        log.debug("[getFieldNames] datastore:{}; entity: {}; customObjectName: {}.", dataSet.getDataStore(), entity,
                 customObjectName);
         try {
             List<Item> fieldNames = new ArrayList<>();
@@ -236,7 +236,7 @@ public class UIActionService extends MarketoService {
 
     @Suggestions(CUSTOM_OBJECT_NAMES)
     public SuggestionValues getCustomObjectNames(@Option final MarketoDataStore dataStore) {
-        LOG.debug("[getCustomObjectNames] {}.", dataStore);
+        log.debug("[getCustomObjectNames] {}.", dataStore);
         try {
             initClients(dataStore);
             String aToken = authorizationClient.getAccessToken(dataStore);

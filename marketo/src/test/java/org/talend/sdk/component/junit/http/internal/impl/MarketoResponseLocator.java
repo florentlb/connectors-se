@@ -12,14 +12,15 @@
 // ============================================================================
 package org.talend.sdk.component.junit.http.internal.impl;
 
-import static java.util.Optional.ofNullable;
-
 import java.util.function.Predicate;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.talend.sdk.component.junit.http.api.Request;
 
+import lombok.extern.slf4j.Slf4j;
+
+import static java.util.Optional.ofNullable;
+
+@Slf4j
 public class MarketoResponseLocator extends DefaultResponseLocator {
 
     public static final String MARKETO_FIND_PATTERN_IDENTITY_OAUTH_TOKEN = ".*/identity/oauth/token.*";
@@ -27,8 +28,6 @@ public class MarketoResponseLocator extends DefaultResponseLocator {
     public static final String MARKTO_REPLACE_IDENTITY_OAUTH_TOKEN = "/identity/oauth/token.*";
 
     public static final String PREFIX = "talend/testing/http/";
-
-    private transient static final Logger LOG = LoggerFactory.getLogger(MarketoResponseLocator.class);
 
     private String test;
 
@@ -44,7 +43,7 @@ public class MarketoResponseLocator extends DefaultResponseLocator {
         boolean uriMatches;
         if (requestUri.matches(MARKETO_FIND_PATTERN_IDENTITY_OAUTH_TOKEN)) {
             uriMatches = true;
-            LOG.debug("[MarketoResponseLocator#matches] [{}] Checking URI: {}.", uriMatches, requestUri);
+            log.debug("[MarketoResponseLocator#matches] [{}] Checking URI: {}.", uriMatches, requestUri);
         } else {
             uriMatches = requestUri.equals(model.getUri());
         }
@@ -58,8 +57,8 @@ public class MarketoResponseLocator extends DefaultResponseLocator {
             return false;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Matching test: {} for {}", request, model);
+        if (log.isDebugEnabled()) {
+            log.debug("Matching test: {} for {}", request, model);
         }
 
         if (!headLineMatches && requestUri.contains("?")) { // strip the query

@@ -18,12 +18,9 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.talend.components.marketo.dataset.MarketoInputConfiguration;
 import org.talend.components.marketo.service.AuthorizationClient;
 import org.talend.components.marketo.service.MarketoService;
-
 import org.talend.sdk.component.api.component.Icon;
 import org.talend.sdk.component.api.component.Icon.IconType;
 import org.talend.sdk.component.api.component.Version;
@@ -35,6 +32,9 @@ import org.talend.sdk.component.api.input.PartitionSize;
 import org.talend.sdk.component.api.input.Split;
 import org.talend.sdk.component.api.meta.Documentation;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Version
 @Icon(value = IconType.MARKETO)
 @PartitionMapper(family = "Marketo", name = "Input")
@@ -47,14 +47,12 @@ public class MarketoInputMapper implements Serializable {
 
     private AuthorizationClient authorizationClient;
 
-    private transient static final Logger LOG = LoggerFactory.getLogger(MarketoInputMapper.class);
-
     public MarketoInputMapper(@Option("configuration") final MarketoInputConfiguration configuration, //
             final MarketoService service) {
         this.configuration = configuration;
         this.service = service;
         authorizationClient = service.getAuthorizationClient();
-        LOG.debug("[MarketoInputMapper] {}", configuration);
+        log.debug("[MarketoInputMapper] {}", configuration);
         authorizationClient.base(configuration.getDataSet().getDataStore().getEndpoint());
     }
 

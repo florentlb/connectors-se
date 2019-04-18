@@ -28,7 +28,6 @@ import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriterFactory;
 
-import org.slf4j.Logger;
 import org.talend.components.marketo.dataset.MarketoDataSet;
 import org.talend.components.marketo.dataset.MarketoDataSet.MarketoEntity;
 import org.talend.components.marketo.dataset.MarketoInputConfiguration;
@@ -45,10 +44,10 @@ import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 
 import static java.util.stream.Collectors.joining;
 import static javax.json.JsonValue.ValueType.NULL;
-import static org.slf4j.LoggerFactory.getLogger;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACCESS_TOKEN;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACTIVITY_DATE;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACTIVITY_TYPE_ID;
@@ -71,6 +70,7 @@ import static org.talend.components.marketo.MarketoApiConstants.ATTR_WORKSPACE_N
 import static org.talend.components.marketo.service.AuthorizationClient.CLIENT_CREDENTIALS;
 
 @Accessors
+@Slf4j
 @Service
 public class MarketoService {
 
@@ -120,8 +120,6 @@ public class MarketoService {
     @Service
     protected ListClient listClient;
 
-    private transient static final Logger LOG = getLogger(MarketoService.class);
-
     public void initClients(MarketoDataStore dataStore) {
         authorizationClient.base(dataStore.getEndpoint());
         leadClient.base(dataStore.getEndpoint());
@@ -134,16 +132,16 @@ public class MarketoService {
     /**
      * Retrieve an set an access token for using API
      */
-    public String retrieveAccessToken(@Configuration("dataSet") final MarketoDataSet dataSet) {
+    public String retrieveAccessToken(@Configuration("configuration") final MarketoDataSet dataSet) {
         initClients(dataSet.getDataStore());
         Response<JsonObject> result = authorizationClient.getAuthorizationToken(CLIENT_CREDENTIALS,
                 dataSet.getDataStore().getClientId(), dataSet.getDataStore().getClientSecret());
-        LOG.debug("[retrieveAccessToken] [{}] : {}.", result.status(), result.body());
+        log.debug("[retrieveAccessToken] [{}] : {}.", result.status(), result.body());
         if (result.status() == 200) {
             return result.body().getString(ATTR_ACCESS_TOKEN);
         } else {
             String error = i18n.accessTokenRetrievalError(result.status(), result.headers().toString());
-            LOG.error("[retrieveAccessToken] {}", error);
+            log.error("[retrieveAccessToken] {}", error);
             throw new RuntimeException(error);
         }
     }
@@ -164,19 +162,19 @@ public class MarketoService {
         if (response.status() == 200 && response.body() != null && response.body().getJsonArray(ATTR_RESULT) != null) {
             return response.body().getJsonArray(ATTR_RESULT);
         }
-        LOG.error("[parseResultFromResponse] Error: [{}] headers:{}; body: {}.", response.status(), response.headers(),
+        log.error("[parseResultFromResponse] Error: [{}] headers:{}; body: {}.", response.status(), response.headers(),
                 response.body());
         throw new IllegalArgumentException(i18n.invalidOperation());
     }
 
     public Schema getEntitySchema(final MarketoInputConfiguration configuration) {
-        LOG.debug("[getEntitySchema] {} ", configuration);
+        log.debug("[getEntitySchema] {} ", configuration);
         return getEntitySchema(configuration.getDataSet().getDataStore(), configuration.getDataSet().getEntity().name(), "", "");
     }
 
     public Schema getEntitySchema(final MarketoDataStore dataStore, final String entity, final String customObjectName,
             final String listAction) {
-        LOG.debug("[getEntitySchema] {} - {} - {}- {}", dataStore, entity, customObjectName, listAction);
+        log.debug("[getEntitySchema] {} - {} - {}- {}", dataStore, entity, customObjectName, listAction);
         try {
             initClients(dataStore);
             String accessToken = authorizationClient.getAccessToken(dataStore);
@@ -209,10 +207,10 @@ public class MarketoService {
             // .asJsonObject().getJsonArray(ATTR_FIELDS);
             // break;
             }
-            LOG.debug("[getEntitySchema] entitySchema: {}.", entitySchema);
+            log.debug("[getEntitySchema] entitySchema: {}.", entitySchema);
             return getSchemaForEntity(entitySchema);
         } catch (Exception e) {
-            LOG.error(i18n.exceptionOccured(e.getMessage()));
+            log.error(i18n.exceptionOccured(e.getMessage()));
         }
         return null;
     }
@@ -277,7 +275,7 @@ public class MarketoService {
                 entryType = Type.DATETIME;
                 break;
             default:
-                LOG.warn(i18n.nonManagedType(dataType, entryName));
+                log.warn(i18n.nonManagedType(dataType, entryName));
                 entryType = Schema.Type.STRING;
             }
             entries.add(
@@ -339,14 +337,14 @@ public class MarketoService {
     }
 
     public Record convertToRecord(final JsonObject json, final Map<String, Entry> schema) {
-        LOG.debug("[convertToRecord] json: {} with schema: {}.", json, schema);
-        LOG.debug("[convertToRecord] master schema :{}", schema);
+        log.debug("[convertToRecord] json: {} with schema: {}.", json, schema);
+        log.debug("[convertToRecord] master schema :{}", schema);
         Record.Builder b = getRecordBuilder().newRecordBuilder();
         java.util.Set<java.util.Map.Entry<String, JsonValue>> props = json.entrySet();
         for (java.util.Map.Entry<String, JsonValue> p : props) {
             String key = p.getKey();
             Schema.Entry e = schema.get(key);
-            LOG.debug("schema entry : {}.", e);
+            log.debug("schema entry : {}.", e);
             Type type = null;
             ValueType jsonType = p.getValue().getValueType();
             if (e == null) {
@@ -374,7 +372,7 @@ public class MarketoService {
                     type = Type.DATETIME;
                 }
             }
-            LOG.debug("[convertToRecord] {} - {} ({})", p, e, p.getValue().getValueType());
+            log.debug("[convertToRecord] {} - {} ({})", p, e, p.getValue().getValueType());
             switch (type) {
             case STRING:
                 switch (jsonType) {
@@ -419,7 +417,7 @@ public class MarketoService {
                     b.withDateTime(key, jsonType.equals(NULL) ? null
                             : new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(json.getString(key)));
                 } catch (ParseException e1) {
-                    LOG.error("[convertToRecord] Date parsing error: {}.", e1.getMessage());
+                    log.error("[convertToRecord] Date parsing error: {}.", e1.getMessage());
                 }
                 break;
             case ARRAY:
