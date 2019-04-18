@@ -257,7 +257,7 @@ public class UIActionService extends MarketoService {
 
     @AsyncValidation(VALIDATION_SINCE_DATETIME)
     public ValidationResult validateSinceDateTime(@Option("sinceDateTime") final String date) {
-        if (date.isEmpty()) {
+        if (date == null || date.isEmpty()) {
             return new ValidationResult(ValidationResult.Status.KO, i18n.invalidDateTime());
         }
         return new ValidationResult(ValidationResult.Status.OK, null);
@@ -265,7 +265,7 @@ public class UIActionService extends MarketoService {
 
     @AsyncValidation(VALIDATION_FIELDS)
     public ValidationResult validateFields(@Option("fields") final List<String> fields) {
-        if (fields.isEmpty()) {
+        if (fields == null || fields.isEmpty()) {
             return new ValidationResult(ValidationResult.Status.KO, i18n.invalidFields());
         }
         return new ValidationResult(ValidationResult.Status.OK, null);
