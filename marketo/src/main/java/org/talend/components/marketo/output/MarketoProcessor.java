@@ -12,11 +12,12 @@
 // ============================================================================
 package org.talend.components.marketo.output;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.annotation.PostConstruct;
 import javax.json.JsonObject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.talend.components.marketo.MarketoSourceOrProcessor;
 import org.talend.components.marketo.dataset.MarketoOutputConfiguration;
 import org.talend.components.marketo.service.MarketoService;
@@ -25,50 +26,38 @@ import org.talend.sdk.component.api.component.Icon.IconType;
 import org.talend.sdk.component.api.component.Version;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.meta.Documentation;
+import org.talend.sdk.component.api.processor.AfterGroup;
 import org.talend.sdk.component.api.processor.ElementListener;
 import org.talend.sdk.component.api.processor.Input;
 import org.talend.sdk.component.api.processor.Processor;
 import org.talend.sdk.component.api.record.Record;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_REASONS;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_RESULT;
 
+@Slf4j
 @Version
 @Processor(family = "Marketo", name = "Output")
 @Icon(value = IconType.MARKETO)
 @Documentation("Marketo Output Component")
 public class MarketoProcessor extends MarketoSourceOrProcessor {
 
-    protected final MarketoOutputConfiguration dataSet;
+    private static final int BATCH_SIZE = 300;
+
+    protected final MarketoOutputConfiguration configuration;
 
     private ProcessorStrategy strategy;
 
-    private transient static final Logger LOG = LoggerFactory.getLogger(MarketoProcessor.class);
+    private List<JsonObject> records;
 
     public MarketoProcessor(@Option("configuration") final MarketoOutputConfiguration configuration, //
             final MarketoService service) {
         super(configuration.getDataSet(), service);
-        this.dataSet = configuration;
-
-        switch (configuration.getDataSet().getEntity()) {
-        case Lead:
-            strategy = new LeadStrategy(configuration, service);
-            break;
-        // TODO reenable after
-        // case List:
-        // strategy = new ListStrategy(configuration, service);
-        // break;
-        // case CustomObject:
-        // strategy = new CustomObjectStrategy(configuration, service);
-        // break;
-        // case Company:
-        // strategy = new CompanyStrategy(configuration, service);
-        // break;
-        // case Opportunity:
-        // case OpportunityRole:
-        // strategy = new OpportunityStrategy(configuration, service);
-        // break;
-        }
+        this.configuration = configuration;
+        records = new ArrayList<>();
+        strategy = new LeadStrategy(configuration, service);
     }
 
     @PostConstruct
@@ -78,23 +67,29 @@ public class MarketoProcessor extends MarketoSourceOrProcessor {
     }
 
     @ElementListener
-    // public void map(final JsonObject data, @Output final OutputEmitter<JsonObject> main, @Output("rejected") final
-    // OutputEmitter<JsonObject> rejected) {
     public void map(@Input final Record incomingData) {
         JsonObject data = marketoService.toJson(incomingData);
-        LOG.debug("[map] received: {}.", data);
-        JsonObject payload = strategy.getPayload(data);
-        LOG.debug("[map] payload : {}.", payload);
-        JsonObject result = strategy.runAction(payload);
-        LOG.debug("[map] result  : {}.", result);
-        for (JsonObject status : result.getJsonArray(ATTR_RESULT).getValuesAs(JsonObject.class)) {
-            if (strategy.isRejected(status)) {
-                // rejected.emit(strategy.createRejectData(status));
-                throw new RuntimeException(getErrors(status.getJsonArray(ATTR_REASONS)));
-            } else {
-                // main.emit(strategy.createMainData(status));
-            }
+        records.add(data);
+        log.debug("[map] received: {}.", data);
+        if (records.size() >= BATCH_SIZE) {
+            flush();
         }
+    }
+
+    @AfterGroup
+    private void flush() {
+        log.warn("[flush] called. Processing {} records.", records.size());
+        if (records.isEmpty()) {
+            return;
+        }
+        JsonObject payload = strategy.getPayload(records);
+        log.debug("[map] payload : {}.", payload);
+        JsonObject result = strategy.runAction(payload);
+        records.clear();
+        log.debug("[map] result  : {}.", result);
+        result.getJsonArray(ATTR_RESULT).getValuesAs(JsonObject.class).stream().filter(strategy::isRejected).forEach(e -> {
+            log.error(getErrors(e.getJsonArray(ATTR_REASONS)));
+        });
     }
 
 }

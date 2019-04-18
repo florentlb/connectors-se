@@ -12,28 +12,28 @@
 // ============================================================================
 package org.talend.components.marketo.output;
 
+import java.util.List;
+
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+
+import org.talend.components.marketo.dataset.MarketoOutputConfiguration;
+import org.talend.components.marketo.dataset.MarketoOutputConfiguration.OutputAction;
+import org.talend.components.marketo.service.LeadClient;
+import org.talend.components.marketo.service.MarketoService;
+import org.talend.sdk.component.api.configuration.Option;
+
+import lombok.extern.slf4j.Slf4j;
+
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACTION;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_INPUT;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_LOOKUP_FIELD;
 import static org.talend.components.marketo.MarketoApiConstants.HEADER_CONTENT_TYPE_APPLICATION_JSON;
 
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.talend.components.marketo.dataset.MarketoOutputConfiguration;
-import org.talend.components.marketo.dataset.MarketoOutputConfiguration.OutputAction;
-import org.talend.components.marketo.service.LeadClient;
-import org.talend.components.marketo.service.MarketoService;
-
-import org.talend.sdk.component.api.configuration.Option;
-
+@Slf4j
 public class LeadStrategy extends OutputComponentStrategy implements ProcessorStrategy {
 
     private LeadClient leadClient;
-
-    private transient static final Logger LOG = LoggerFactory.getLogger(LeadStrategy.class);
 
     public LeadStrategy(@Option("configuration") final MarketoOutputConfiguration dataSet, //
             final MarketoService service) {
@@ -43,11 +43,8 @@ public class LeadStrategy extends OutputComponentStrategy implements ProcessorSt
     }
 
     @Override
-    public JsonObject getPayload(JsonObject incomingData) {
-        JsonObject data = incomingData;
-        JsonArray input = jsonFactory.createArrayBuilder().add(data).build();
-        LOG.debug("[getPayload] data : {}", data);
-        LOG.debug("[getPayload] input: {}", input);
+    public JsonObject getPayload(List<JsonObject> incomingData) {
+        JsonArray input = jsonFactory.createArrayBuilder(incomingData).build();
         if (OutputAction.sync.equals(configuration.getAction())) {
             return jsonFactory.createObjectBuilder() //
                     .add(ATTR_ACTION, configuration.getSyncMethod().name()) //

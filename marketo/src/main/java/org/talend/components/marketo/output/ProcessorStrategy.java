@@ -12,10 +12,12 @@
 // ============================================================================
 package org.talend.components.marketo.output;
 
-import static java.util.Arrays.asList;
-import static org.talend.components.marketo.MarketoApiConstants.ATTR_STATUS;
+import java.util.List;
 
 import javax.json.JsonObject;
+
+import static java.util.Arrays.asList;
+import static org.talend.components.marketo.MarketoApiConstants.ATTR_STATUS;
 
 public interface ProcessorStrategy {
 
@@ -24,10 +26,10 @@ public interface ProcessorStrategy {
     /**
      * Generate payload for API call
      *
-     * @param incomingData
+     * @param incomingData list of elements to process
      * @return
      */
-    JsonObject getPayload(JsonObject incomingData);
+    JsonObject getPayload(List<JsonObject> incomingData);
 
     /**
      * Execute the processor's action according configuration parameters
