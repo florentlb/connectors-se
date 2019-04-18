@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.Suggestable;
+import org.talend.sdk.component.api.configuration.action.Validable;
 import org.talend.sdk.component.api.configuration.condition.ActiveIf;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
@@ -30,6 +31,8 @@ import lombok.ToString;
 import static org.talend.components.marketo.service.UIActionService.ACTIVITIES_LIST;
 import static org.talend.components.marketo.service.UIActionService.FIELD_NAMES;
 import static org.talend.components.marketo.service.UIActionService.LEAD_KEY_NAME_LIST;
+import static org.talend.components.marketo.service.UIActionService.VALIDATION_FIELDS;
+import static org.talend.components.marketo.service.UIActionService.VALIDATION_SINCE_DATETIME;
 
 @Data
 @GridLayout({ //
@@ -91,6 +94,7 @@ public class MarketoInputConfiguration implements Serializable {
      */
     @Option
     @ActiveIf(target = "leadAction", value = { "getLeadChanges", "getLeadActivity" })
+    @Validable(VALIDATION_SINCE_DATETIME)
     @Documentation("Since Date Time")
     private String sinceDateTime = ZonedDateTime.now().minusMonths(7)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd" + " HH:mm:ss"));
@@ -112,8 +116,9 @@ public class MarketoInputConfiguration implements Serializable {
     private List<String> activityTypeIds;
 
     @Option
-    @Suggestable(value = FIELD_NAMES, parameters = { "../dataSet" })
     @ActiveIf(target = "leadAction", negate = true, value = { "getLeadActivity" })
+    @Suggestable(value = FIELD_NAMES, parameters = { "../dataSet" })
+    @Validable(VALIDATION_FIELDS)
     @Documentation("Fields")
     private List<String> fields = Arrays.asList("firstName", "lastName", "email", "company");
 

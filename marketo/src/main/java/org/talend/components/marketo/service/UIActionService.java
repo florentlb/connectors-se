@@ -68,6 +68,10 @@ public class UIActionService extends MarketoService {
 
     public static final String GUESS_ENTITY_SCHEMA_OUTPUT = "guessEntitySchemaForOutput";
 
+    public static final String VALIDATION_SINCE_DATETIME = "VALIDATION_SINCE_DATETIME";
+
+    public static final String VALIDATION_FIELDS = "VALIDATION_FIELDS";
+
     @HealthCheck(HEALTH_CHECK)
     public HealthCheckStatus doHealthCheck(@Option(MarketoDataStore.NAME) MarketoDataStore dataStore, final I18nMessage i18n) {
         initClients(dataStore);
@@ -81,7 +85,7 @@ public class UIActionService extends MarketoService {
     }
 
     @AsyncValidation(URL_CHECK)
-    public ValidationResult validateUrl(final String url) {
+    public ValidationResult validateEndpoint(@Option("endpoint") final String url) {
         try {
             new URL(url);
             return new ValidationResult(ValidationResult.Status.OK, null);
@@ -249,6 +253,22 @@ public class UIActionService extends MarketoService {
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    @AsyncValidation(VALIDATION_SINCE_DATETIME)
+    public ValidationResult validateSinceDateTime(@Option("sinceDateTime") final String date) {
+        if (date.isEmpty()) {
+            return new ValidationResult(ValidationResult.Status.KO, i18n.invalidDateTime());
+        }
+        return new ValidationResult(ValidationResult.Status.OK, null);
+    }
+
+    @AsyncValidation(VALIDATION_FIELDS)
+    public ValidationResult validateFields(@Option("fields") final List<String> fields) {
+        if (fields.isEmpty()) {
+            return new ValidationResult(ValidationResult.Status.KO, i18n.invalidFields());
+        }
+        return new ValidationResult(ValidationResult.Status.OK, null);
     }
 
 }
