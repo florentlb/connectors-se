@@ -77,7 +77,7 @@ public class MarketoProcessor extends MarketoSourceOrProcessor {
     }
 
     @AfterGroup
-    private void flush() {
+    public void flush() {
         log.warn("[flush] called. Processing {} records.", records.size());
         if (records.isEmpty()) {
             return;
