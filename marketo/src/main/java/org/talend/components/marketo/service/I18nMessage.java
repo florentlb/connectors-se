@@ -27,7 +27,7 @@ public interface I18nMessage {
 
     String nonManagedType(String type, String field);
 
-    String invalidDateTime();
+    String invalidBlankProperty();
 
     String invalidFields();
 }

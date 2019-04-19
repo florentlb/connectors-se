@@ -27,7 +27,7 @@ import lombok.Data;
 import lombok.ToString;
 
 import static org.talend.components.marketo.service.UIActionService.HEALTH_CHECK;
-import static org.talend.components.marketo.service.UIActionService.URL_CHECK;
+import static org.talend.components.marketo.service.UIActionService.VALIDATION_URL_PROPERTY;
 
 @Data
 @DataStore(MarketoDataStore.NAME)
@@ -45,7 +45,7 @@ public class MarketoDataStore implements Serializable {
     public static final String NAME = "MarketoDataStore";
 
     @Option
-    @Validable(URL_CHECK)
+    @Validable(VALIDATION_URL_PROPERTY)
     @Documentation("Marketo Endpoint (host only, ie: https://123-ABC-456.mktorest.com)")
     private String endpoint;
 

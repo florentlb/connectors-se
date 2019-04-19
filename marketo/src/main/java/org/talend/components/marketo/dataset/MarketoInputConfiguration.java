@@ -22,6 +22,7 @@ import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.Suggestable;
 import org.talend.sdk.component.api.configuration.action.Validable;
 import org.talend.sdk.component.api.configuration.condition.ActiveIf;
+import org.talend.sdk.component.api.configuration.constraint.Min;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
 
@@ -31,8 +32,9 @@ import lombok.ToString;
 import static org.talend.components.marketo.service.UIActionService.ACTIVITIES_LIST;
 import static org.talend.components.marketo.service.UIActionService.FIELD_NAMES;
 import static org.talend.components.marketo.service.UIActionService.LEAD_KEY_NAME_LIST;
-import static org.talend.components.marketo.service.UIActionService.VALIDATION_FIELDS;
-import static org.talend.components.marketo.service.UIActionService.VALIDATION_SINCE_DATETIME;
+import static org.talend.components.marketo.service.UIActionService.VALIDATION_INTEGER_PROPERTY;
+import static org.talend.components.marketo.service.UIActionService.VALIDATION_LIST_PROPERTY;
+import static org.talend.components.marketo.service.UIActionService.VALIDATION_STRING_PROPERTY;
 
 @Data
 @GridLayout({ //
@@ -70,17 +72,21 @@ public class MarketoInputConfiguration implements Serializable {
 
     @Option
     @ActiveIf(target = "leadAction", value = "getLead")
+    @Min(0)
+    @Validable(VALIDATION_INTEGER_PROPERTY)
     @Documentation("Lead Id")
     private Integer leadId;
 
     @Option
     @ActiveIf(target = "leadAction", value = "getMultipleLeads")
     @Suggestable(value = LEAD_KEY_NAME_LIST, parameters = { "../dataSet/dataStore" })
+    @Validable(VALIDATION_STRING_PROPERTY)
     @Documentation("Key Name")
     private String leadKeyName;
 
     @Option
     @ActiveIf(target = "leadAction", value = "getMultipleLeads")
+    @Validable(VALIDATION_STRING_PROPERTY)
     @Documentation("Values (Comma-separated)")
     private String leadKeyValues;
 
@@ -94,7 +100,7 @@ public class MarketoInputConfiguration implements Serializable {
      */
     @Option
     @ActiveIf(target = "leadAction", value = { "getLeadChanges", "getLeadActivity" })
-    @Validable(VALIDATION_SINCE_DATETIME)
+    @Validable(VALIDATION_STRING_PROPERTY)
     @Documentation("Since Date Time")
     private String sinceDateTime = ZonedDateTime.now().minusMonths(7)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd" + " HH:mm:ss"));
@@ -112,16 +118,21 @@ public class MarketoInputConfiguration implements Serializable {
     @Option
     @ActiveIf(target = "leadAction", value = "getLeadActivity")
     @Suggestable(value = ACTIVITIES_LIST, parameters = { "../dataSet/dataStore" })
+    @Validable(VALIDATION_LIST_PROPERTY)
     @Documentation("Activity Type Ids (10 max supported")
     private List<String> activityTypeIds;
 
     @Option
     @ActiveIf(target = "leadAction", negate = true, value = { "getLeadActivity" })
     @Suggestable(value = FIELD_NAMES, parameters = { "../dataSet" })
-    @Validable(VALIDATION_FIELDS)
+    @Validable(VALIDATION_LIST_PROPERTY)
     @Documentation("Fields")
     private List<String> fields = Arrays.asList("firstName", "lastName", "email", "company");
 
+    /*
+     * 2.For get Lead changes,there are two situations if leave Fields empty.Please see two attached pic getLead_Fields_Null_1.png
+     * and getLead_Fields_Null_2.png
+     */
     public enum LeadAction {
         getLead,
         getMultipleLeads,

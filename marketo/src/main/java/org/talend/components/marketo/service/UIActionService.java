@@ -62,15 +62,13 @@ public class UIActionService extends MarketoService {
 
     public static final String HEALTH_CHECK = "MARKETO_HEALTH_CHECK";
 
-    public static final String URL_CHECK = "MARKETO_URL_CHECK";
+    public static final String VALIDATION_URL_PROPERTY = "MARKETO_VALIDATION_URL_PROPERTY";
 
-    public static final String GUESS_ENTITY_SCHEMA_INPUT = "guessEntitySchemaForInput";
+    public static final String VALIDATION_STRING_PROPERTY = "VALIDATION_STRING_PROPERTY";
 
-    public static final String GUESS_ENTITY_SCHEMA_OUTPUT = "guessEntitySchemaForOutput";
+    public static final String VALIDATION_INTEGER_PROPERTY = "VALIDATION_INTEGER_PROPERTY";
 
-    public static final String VALIDATION_SINCE_DATETIME = "VALIDATION_SINCE_DATETIME";
-
-    public static final String VALIDATION_FIELDS = "VALIDATION_FIELDS";
+    public static final String VALIDATION_LIST_PROPERTY = "VALIDATION_LIST_PROPERTY";
 
     @HealthCheck(HEALTH_CHECK)
     public HealthCheckStatus doHealthCheck(@Option(MarketoDataStore.NAME) MarketoDataStore dataStore, final I18nMessage i18n) {
@@ -81,16 +79,6 @@ public class UIActionService extends MarketoService {
             return new HealthCheckStatus(HealthCheckStatus.Status.OK, i18n.connectionSuccessful());
         } else {
             return new HealthCheckStatus(HealthCheckStatus.Status.KO, i18n.accessTokenRetrievalError(result.status(), ""));
-        }
-    }
-
-    @AsyncValidation(URL_CHECK)
-    public ValidationResult validateEndpoint(@Option("endpoint") final String url) {
-        try {
-            new URL(url);
-            return new ValidationResult(ValidationResult.Status.OK, null);
-        } catch (MalformedURLException e) {
-            return new ValidationResult(ValidationResult.Status.KO, e.getMessage());
         }
     }
 
@@ -255,17 +243,35 @@ public class UIActionService extends MarketoService {
         }
     }
 
-    @AsyncValidation(VALIDATION_SINCE_DATETIME)
-    public ValidationResult validateSinceDateTime(@Option("sinceDateTime") final String date) {
-        if (date == null || date.isEmpty()) {
-            return new ValidationResult(ValidationResult.Status.KO, i18n.invalidDateTime());
+    @AsyncValidation(VALIDATION_URL_PROPERTY)
+    public ValidationResult validateEndpoint(final String url) {
+        try {
+            new URL(url);
+            return new ValidationResult(ValidationResult.Status.OK, null);
+        } catch (MalformedURLException e) {
+            return new ValidationResult(ValidationResult.Status.KO, e.getMessage());
+        }
+    }
+
+    @AsyncValidation(VALIDATION_STRING_PROPERTY)
+    public ValidationResult validateString(final String string) {
+        if (string == null || string.isEmpty()) {
+            return new ValidationResult(ValidationResult.Status.KO, i18n.invalidBlankProperty());
         }
         return new ValidationResult(ValidationResult.Status.OK, null);
     }
 
-    @AsyncValidation(VALIDATION_FIELDS)
-    public ValidationResult validateFields(@Option("fields") final List<String> fields) {
-        if (fields == null || fields.isEmpty()) {
+    @AsyncValidation(VALIDATION_INTEGER_PROPERTY)
+    public ValidationResult validateInteger(final Integer integer) {
+        if (integer == null || integer.toString().isEmpty()) {
+            return new ValidationResult(ValidationResult.Status.KO, i18n.invalidBlankProperty());
+        }
+        return new ValidationResult(ValidationResult.Status.OK, null);
+    }
+
+    @AsyncValidation(VALIDATION_LIST_PROPERTY)
+    public ValidationResult validateList(final List<String> list) {
+        if (list == null || list.isEmpty()) {
             return new ValidationResult(ValidationResult.Status.KO, i18n.invalidFields());
         }
         return new ValidationResult(ValidationResult.Status.OK, null);
