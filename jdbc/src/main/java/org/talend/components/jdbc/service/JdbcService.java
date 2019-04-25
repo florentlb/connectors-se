@@ -213,7 +213,7 @@ public class JdbcService {
                     }
                     return invoked;
                 } catch (final InvocationTargetException ite) {
-                    throw toIllegalStateException(ite.getTargetException());
+                    throw ite.getTargetException();
                 } finally {
                     thread.setContextClassLoader(prev);
                 }
