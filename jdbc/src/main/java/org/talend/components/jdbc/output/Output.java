@@ -26,12 +26,14 @@ import org.talend.sdk.component.api.processor.Input;
 import org.talend.sdk.component.api.record.Record;
 
 import javax.annotation.PreDestroy;
+import java.io.IOException;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.talend.components.jdbc.ErrorFactory.toIllegalStateException;
 import static org.talend.components.jdbc.service.JdbcService.checkTableExistence;
 
 @Slf4j
@@ -107,9 +109,9 @@ public abstract class Output implements Serializable {
         try {
             final List<Reject> discards = getQueryManager().execute(records, datasource);
             discards.stream().map(Object::toString).forEach(log::error);
-        } catch (final Exception e) {
+        } catch (final SQLException | IOException e) {
             records.stream().map(r -> new Reject(e.getMessage(), r)).map(Reject::toString).forEach(log::error);
-            throw new IllegalStateException(e);
+            throw toIllegalStateException(e);
         }
     }
 

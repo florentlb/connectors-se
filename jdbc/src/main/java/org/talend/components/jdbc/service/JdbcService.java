@@ -15,6 +15,7 @@ package org.talend.components.jdbc.service;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.talend.components.jdbc.ErrorFactory;
 import org.talend.components.jdbc.configuration.JdbcConfiguration;
 import org.talend.components.jdbc.datastore.JdbcConnection;
 import org.talend.components.jdbc.output.platforms.PlatformFactory;
@@ -45,6 +46,7 @@ import java.util.regex.Pattern;
 
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
+import static org.talend.components.jdbc.ErrorFactory.toIllegalStateException;
 
 @Slf4j
 @Service
@@ -211,7 +213,7 @@ public class JdbcService {
                     }
                     return invoked;
                 } catch (final InvocationTargetException ite) {
-                    throw ite.getTargetException();
+                    throw toIllegalStateException(ite.getTargetException());
                 } finally {
                     thread.setContextClassLoader(prev);
                 }
