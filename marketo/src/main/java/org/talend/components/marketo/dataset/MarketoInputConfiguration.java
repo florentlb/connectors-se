@@ -16,6 +16,7 @@ import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.talend.sdk.component.api.configuration.Option;
@@ -120,7 +121,7 @@ public class MarketoInputConfiguration implements Serializable {
     @Suggestable(value = ACTIVITIES_LIST, parameters = { "../dataSet/dataStore" })
     @Validable(VALIDATION_LIST_PROPERTY)
     @Documentation("Activity Type Ids (10 max supported")
-    private List<String> activityTypeIds;
+    private List<String> activityTypeIds = Collections.emptyList();
 
     @Option
     @ActiveIf(target = "leadAction", negate = true, value = { "getLeadActivity" })
