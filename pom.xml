@@ -63,8 +63,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <component-api.version>1.1.5</component-api.version>
-        <component-runtime.version>1.1.8</component-runtime.version>
+        <component-runtime.version>1.1.9-SNAPSHOT</component-runtime.version>
         <slf4j.version>1.7.25</slf4j.version>
 
         <beam.version>2.11.0</beam.version>
@@ -204,7 +203,7 @@
         <dependency>
             <groupId>org.talend.sdk.component</groupId>
             <artifactId>component-api</artifactId>
-            <version>${component-api.version}</version>
+            <version>${component-runtime.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -652,7 +651,7 @@
                                         <artifactItem>
                                             <groupId>org.talend.sdk.component</groupId>
                                             <artifactId>component-tools</artifactId>
-                                            <version>${component-api.version}</version>
+                                            <version>${component-runtime.version}</version>
                                             <type>jar</type>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>
