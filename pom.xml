@@ -37,6 +37,8 @@
         <module>salesforce</module>
         <module>azure</module>
         <module>azure-eventhubs</module>
+        <module>connections</module>
+        <module>component-extension</module>
     </modules>
 
     <scm>
