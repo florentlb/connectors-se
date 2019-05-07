@@ -16,6 +16,7 @@ import java.io.Serializable;
 
 import org.talend.components.marketo.datastore.MarketoDataStore;
 import org.talend.sdk.component.api.configuration.Option;
+import org.talend.sdk.component.api.configuration.action.Suggestable;
 import org.talend.sdk.component.api.configuration.type.DataSet;
 import org.talend.sdk.component.api.configuration.ui.DefaultValue;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
@@ -24,13 +25,15 @@ import org.talend.sdk.component.api.meta.Documentation;
 import lombok.Data;
 import lombok.ToString;
 
+import static org.talend.components.marketo.service.UIActionService.LIST_NAMES;
+
 @Data
 @DataSet
 @Documentation("Marketo Dataset")
 @ToString
 @GridLayout({ @GridLayout.Row("dataStore"), //
         @GridLayout.Row("entity"), //
-        // @GridLayout.Row("customObjectName"), //
+        @GridLayout.Row("listId"), //
 })
 public class MarketoDataSet implements Serializable {
 
@@ -51,5 +54,10 @@ public class MarketoDataSet implements Serializable {
     @DefaultValue(value = "Lead")
     @Documentation("Marketo Entity to manage")
     private MarketoEntity entity;
+
+    @Option
+    @Suggestable(value = LIST_NAMES, parameters = { "../dataStore" })
+    @Documentation("List")
+    private String listId;
 
 }

@@ -69,7 +69,7 @@ public class MarketoInputConfiguration implements Serializable {
      */
     @Option
     @Documentation("Lead Action")
-    private LeadAction leadAction = LeadAction.getLeadChanges;
+    private LeadAction leadAction = LeadAction.getLeadsByList;
 
     @Option
     @ActiveIf(target = "leadAction", value = "getLead")
@@ -128,7 +128,7 @@ public class MarketoInputConfiguration implements Serializable {
     @Suggestable(value = FIELD_NAMES, parameters = { "../dataSet" })
     @Validable(VALIDATION_LIST_PROPERTY)
     @Documentation("Fields")
-    private List<String> fields = Arrays.asList("firstName", "lastName", "email", "company");
+    private List<String> fields = Arrays.asList("id", "firstName", "lastName", "email", "createdAt", "updatedAt");
 
     /*
      * 2.For get Lead changes,there are two situations if leave Fields empty.Please see two attached pic getLead_Fields_Null_1.png
@@ -138,7 +138,8 @@ public class MarketoInputConfiguration implements Serializable {
         getLead,
         getMultipleLeads,
         getLeadActivity,
-        getLeadChanges
+        getLeadChanges,
+        getLeadsByList
     }
 
     public enum ListAction {

@@ -338,20 +338,34 @@ public class MarketoService {
 
     public Record convertToRecord(final JsonObject json, final Map<String, Entry> schema) {
         log.debug("[convertToRecord] json: {} with schema: {}.", json, schema);
-        log.debug("[convertToRecord] master schema :{}", schema);
         Record.Builder b = getRecordBuilder().newRecordBuilder();
-        java.util.Set<java.util.Map.Entry<String, JsonValue>> props = json.entrySet();
-        for (java.util.Map.Entry<String, JsonValue> p : props) {
-            String key = p.getKey();
-            Schema.Entry e = schema.get(key);
-            log.debug("schema entry : {}.", e);
+        java.util.Set<java.util.Map.Entry<String, JsonValue>> props = json.entrySet();// new HashSet<>();
+        // props.addAll(json.entrySet());
+        // TODO check if json is not missing a value in master schema. Otherwise this will lead to a
+        // ArrayIndexOutOfBoundsException
+        log.warn("[convertToRecord] {} vs {}", json.entrySet().size(), schema.keySet().size());
+        // if (json.entryset().size() < schema.keyset().size()) {
+        // schema.keyset().stream().filter(s -> json.get(s) == null).foreach(s -> {
+        // schema.entry ent = schema.get(s);
+        // log.warn("[converttorecord] adding schema column : {}.", ent.getname());
+        // props.add(new abstractmap.simpleentry<>(ent.getname(), jsonvalue.null));
+        // });
+        // }
+        for (java.util.Map.Entry<String, JsonValue> jsonEntry : props) {
+            String jsonKey = jsonEntry.getKey();
+            Schema.Entry schemaEntry = schema.get(jsonKey);
+            log.warn("schema key {} entry : {}.", jsonKey, schemaEntry);
             Type type = null;
-            ValueType jsonType = p.getValue().getValueType();
-            if (e == null) {
+            ValueType jsonValueType = jsonEntry.getValue().getValueType();
+            if (schemaEntry == null) {
                 type = Type.STRING;
-                switch (p.getValue().getValueType()) {
+                switch (jsonValueType) {
                 case NUMBER:
-                    type = Type.DOUBLE;
+                    if (((JsonNumber) jsonEntry.getValue()).isIntegral()) {
+                        type = Type.LONG;
+                    } else {
+                        type = Type.DOUBLE;
+                    }
                     break;
                 case TRUE:
                 case FALSE:
@@ -367,74 +381,79 @@ public class MarketoService {
                     break;
                 }
             } else {
-                type = e.getType();
-                if (Type.LONG.equals(type) && DATETIME.equals(e.getComment())) {
+                type = schemaEntry.getType();
+                if (Type.LONG.equals(type) && DATETIME.equals(schemaEntry.getComment())) {
                     type = Type.DATETIME;
                 }
             }
-            log.debug("[convertToRecord] {} - {} ({})", p, e, p.getValue().getValueType());
+            log.debug("[convertToRecord] {} - {} ({})", jsonEntry, schemaEntry, jsonValueType);
             switch (type) {
             case STRING:
-                switch (jsonType) {
+                switch (jsonValueType) {
                 case ARRAY:
-                    b.withString(key, json.getJsonArray(key).stream().map(JsonValue::toString).collect(joining(",")));
+                    b.withString(jsonKey, json.getJsonArray(jsonKey).stream().map(JsonValue::toString).collect(joining(",")));
                     break;
                 case OBJECT:
-                    b.withString(key, String.valueOf(json.getJsonObject(key).toString()));
+                    b.withString(jsonKey, String.valueOf(json.getJsonObject(jsonKey).toString()));
                     break;
                 case STRING:
-                    b.withString(key, json.getString(key));
+                    b.withString(jsonKey, json.getString(jsonKey));
                     break;
                 case NUMBER:
-                    b.withString(key, String.valueOf(json.getJsonNumber(key)));
+                    if (json.getJsonNumber(jsonKey).isIntegral()) {
+                        b.withLong(jsonKey, json.getJsonNumber(jsonKey).longValue());
+                    } else {
+                        b.withDouble(jsonKey, json.getJsonNumber(jsonKey).doubleValue());
+                    }
                     break;
                 case TRUE:
                 case FALSE:
-                    b.withString(key, String.valueOf(json.getBoolean(key)));
+                    b.withBoolean(jsonKey, json.getBoolean(jsonKey));
                     break;
                 case NULL:
-                    b.withString(key, null);
+                    b.withString(jsonKey, null);
                     break;
                 }
                 break;
             case INT:
-                b.withInt(key, jsonType.equals(NULL) ? 0 : json.getInt(key));
+                b.withInt(jsonKey, jsonValueType.equals(NULL) ? 0 : json.getInt(jsonKey));
                 break;
             case LONG:
-                b.withLong(key, jsonType.equals(NULL) ? 0 : json.getJsonNumber(key).longValue());
+                b.withLong(jsonKey, jsonValueType.equals(NULL) ? 0 : json.getJsonNumber(jsonKey).longValue());
                 break;
             case FLOAT:
-                b.withFloat(key, jsonType.equals(NULL) ? 0 : Float.valueOf(json.getString(key)));
+                b.withFloat(jsonKey, jsonValueType.equals(NULL) ? 0 : Float.valueOf(json.getString(jsonKey)));
                 break;
             case DOUBLE:
-                b.withDouble(key, jsonType.equals(NULL) ? 0 : json.getJsonNumber(key).doubleValue());
+                b.withDouble(jsonKey, jsonValueType.equals(NULL) ? 0 : json.getJsonNumber(jsonKey).doubleValue());
                 break;
             case BOOLEAN:
-                b.withBoolean(key, jsonType.equals(NULL) ? false : json.getBoolean(key));
+                b.withBoolean(jsonKey, jsonValueType.equals(NULL) ? false : json.getBoolean(jsonKey));
                 break;
             case DATETIME:
                 try {
-                    b.withDateTime(key, jsonType.equals(NULL) ? null
-                            : new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(json.getString(key)));
+                    b.withDateTime(jsonKey, jsonValueType.equals(NULL) ? null
+                            : new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(json.getString(jsonKey)));
                 } catch (ParseException e1) {
                     log.error("[convertToRecord] Date parsing error: {}.", e1.getMessage());
                 }
                 break;
             case ARRAY:
-                String ary = json.getJsonArray(key).stream().map(JsonValue::toString).collect(joining(","));
+                String ary = json.getJsonArray(jsonKey).stream().map(JsonValue::toString).collect(joining(","));
                 // not in a sub array
                 if (!ary.contains("{")) {
                     ary = ary.replaceAll("\"", "").replaceAll("(\\[|\\])", "");
                 }
-                b.withString(key, ary);
+                b.withString(jsonKey, ary);
                 break;
             case BYTES:
             case RECORD:
-                b.withString(key, json.getString(key));
+                b.withString(jsonKey, json.getString(jsonKey));
             }
         }
-
-        return b.build();
+        Record record = b.build();
+        log.warn("[convertToRecord] returning : {}. (schema: {}).", record, record.getSchema());
+        return record;
     }
 
     Schema getLeadChangesAndActivitiesSchema() {

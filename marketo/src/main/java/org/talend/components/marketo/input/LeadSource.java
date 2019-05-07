@@ -20,6 +20,7 @@ import javax.json.JsonObject;
 import org.talend.components.marketo.dataset.MarketoInputConfiguration;
 import org.talend.components.marketo.dataset.MarketoInputConfiguration.LeadAction;
 import org.talend.components.marketo.service.LeadClient;
+import org.talend.components.marketo.service.ListClient;
 import org.talend.components.marketo.service.MarketoService;
 import org.talend.sdk.component.api.configuration.Option;
 
@@ -36,17 +37,22 @@ public class LeadSource extends MarketoSource {
 
     private final LeadClient leadClient;
 
+    private final ListClient listClient;
+
     private transient EnumMap<LeadAction, Supplier<JsonObject>> action = new EnumMap<>(LeadAction.class);
 
     public LeadSource(@Option("configuration") final MarketoInputConfiguration configuration, //
-            final MarketoService service) {
+                      final MarketoService service) {
         super(configuration, service);
         this.leadClient = service.getLeadClient();
         this.leadClient.base(this.configuration.getDataSet().getDataStore().getEndpoint());
+        this.listClient = service.getListClient();
+        this.listClient.base(this.configuration.getDataSet().getDataStore().getEndpoint());
         action.put(LeadAction.getLead, this::getLead);
         action.put(LeadAction.getMultipleLeads, this::getMultipleLeads);
         action.put(LeadAction.getLeadActivity, this::getLeadActivities);
         action.put(LeadAction.getLeadChanges, this::getLeadChanges);
+        action.put(LeadAction.getLeadsByList, this::getLeadsByListId);
     }
 
     @Override
@@ -56,6 +62,12 @@ public class LeadSource extends MarketoSource {
             throw new IllegalArgumentException(i18n.invalidOperation());
         }
         return meth.get();
+    }
+
+    private JsonObject getLeadsByListId() {
+        Integer listId = Integer.parseInt(configuration.getDataSet().getListId());
+        String fields = configuration.getFields() == null ? null : configuration.getFields().stream().collect(joining(","));
+        return handleResponse(listClient.getLeadsByListId(accessToken, nextPageToken, listId, fields));
     }
 
     private JsonObject getLead() {
@@ -105,6 +117,11 @@ public class LeadSource extends MarketoSource {
         }
     }
 
+    /**
+     * eturns a list of activities from after a datetime given by the nextPageToken parameter. Also allows for filtering by lead static list membership, or by a list of up to 30 lead ids.
+     *
+     * @return
+     */
     private JsonObject getLeadActivities() {
         if (nextPageToken == null) {
             nextPageToken = getPagingToken(configuration.getSinceDateTime());
@@ -120,6 +137,9 @@ public class LeadSource extends MarketoSource {
                 leadClient.getLeadActivities(accessToken, nextPageToken, activityTypeIds, assetIds, listId, leadIds));
     }
 
+    /**
+     * Returns a list of Data Value Changes and New Lead activities after a given datetime.
+     */
     private JsonObject getLeadChanges() {
         if (nextPageToken == null) {
             nextPageToken = getPagingToken(configuration.getSinceDateTime());
