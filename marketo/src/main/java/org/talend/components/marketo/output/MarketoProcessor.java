@@ -31,6 +31,7 @@ import org.talend.sdk.component.api.processor.ElementListener;
 import org.talend.sdk.component.api.processor.Input;
 import org.talend.sdk.component.api.processor.Processor;
 import org.talend.sdk.component.api.record.Record;
+import org.talend.sdk.component.api.service.configuration.LocalConfiguration;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,18 +45,28 @@ import static org.talend.components.marketo.MarketoApiConstants.ATTR_RESULT;
 @Documentation("Marketo Output Component")
 public class MarketoProcessor extends MarketoSourceOrProcessor {
 
-    private static final int BATCH_SIZE = 300;
+    private int batchSize = 300;
 
     protected final MarketoOutputConfiguration configuration;
+
+    protected final LocalConfiguration localConfiguration;
 
     private ProcessorStrategy strategy;
 
     private List<JsonObject> records;
 
     public MarketoProcessor(@Option("configuration") final MarketoOutputConfiguration configuration, //
-            final MarketoService service) {
+                            final LocalConfiguration localConfiguration, //
+                            final MarketoService service) {
         super(configuration.getDataSet(), service);
         this.configuration = configuration;
+        this.localConfiguration = localConfiguration;
+        String tmp = localConfiguration.get("marketo._maxBatchSize.value");
+        if (tmp != null && !tmp.isEmpty()) {
+            batchSize = Integer.parseInt(tmp);
+            batchSize = batchSize > 300 ? 300 : batchSize;
+        }
+        log.warn("[MarketoProcessor] batchSize = {}", batchSize);
         records = new ArrayList<>();
         strategy = new LeadStrategy(configuration, service);
     }
@@ -71,7 +82,7 @@ public class MarketoProcessor extends MarketoSourceOrProcessor {
         JsonObject data = marketoService.toJson(incomingData);
         records.add(data);
         log.debug("[map] received: {}.", data);
-        if (records.size() >= BATCH_SIZE) {
+        if (records.size() >= batchSize) {
             flush();
         }
     }

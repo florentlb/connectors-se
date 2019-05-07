@@ -21,6 +21,7 @@ import java.util.Map;
 
 import javax.json.JsonArray;
 import javax.json.JsonBuilderFactory;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonReaderFactory;
@@ -361,11 +362,7 @@ public class MarketoService {
                 type = Type.STRING;
                 switch (jsonValueType) {
                 case NUMBER:
-                    if (((JsonNumber) jsonEntry.getValue()).isIntegral()) {
-                        type = Type.LONG;
-                    } else {
-                        type = Type.DOUBLE;
-                    }
+                    type = ((JsonNumber) jsonEntry.getValue()).isIntegral() ? Type.LONG : Type.DOUBLE;
                     break;
                 case TRUE:
                 case FALSE:
