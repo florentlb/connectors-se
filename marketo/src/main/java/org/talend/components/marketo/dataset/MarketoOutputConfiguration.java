@@ -69,7 +69,7 @@ public class MarketoOutputConfiguration implements Serializable {
 
     @Option
     @Documentation("Action")
-    private OutputAction action;
+    private OutputAction action = OutputAction.sync;
 
     /*
      * Lead Entity
@@ -86,6 +86,6 @@ public class MarketoOutputConfiguration implements Serializable {
     @Option
     @ActiveIf(target = "action", value = { "sync" })
     @Documentation("Synchronization method")
-    private SyncMethod syncMethod;
+    private SyncMethod syncMethod = SyncMethod.createOrUpdate;
 
 }
