@@ -42,7 +42,7 @@ public class LeadSource extends MarketoSource {
     private transient EnumMap<LeadAction, Supplier<JsonObject>> action = new EnumMap<>(LeadAction.class);
 
     public LeadSource(@Option("configuration") final MarketoInputConfiguration configuration, //
-                      final MarketoService service) {
+            final MarketoService service) {
         super(configuration, service);
         this.leadClient = service.getLeadClient();
         this.leadClient.base(this.configuration.getDataSet().getDataStore().getEndpoint());
@@ -118,7 +118,9 @@ public class LeadSource extends MarketoSource {
     }
 
     /**
-     * eturns a list of activities from after a datetime given by the nextPageToken parameter. Also allows for filtering by lead static list membership, or by a list of up to 30 lead ids.
+     * Returns a list of activities from after a datetime given by the nextPageToken parameter. Also allows for
+     * filtering by lead
+     * static list membership, or by a list of up to 30 lead ids.
      *
      * @return
      */

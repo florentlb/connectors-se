@@ -21,7 +21,6 @@ import java.util.Map;
 
 import javax.json.JsonArray;
 import javax.json.JsonBuilderFactory;
-import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonReaderFactory;
@@ -48,7 +47,7 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
 import static java.util.stream.Collectors.joining;
-import static javax.json.JsonValue.ValueType.NULL;
+import static java.util.stream.Collectors.toList;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACCESS_TOKEN;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACTIVITY_DATE;
 import static org.talend.components.marketo.MarketoApiConstants.ATTR_ACTIVITY_TYPE_ID;
@@ -169,13 +168,31 @@ public class MarketoService {
     }
 
     public Schema getEntitySchema(final MarketoInputConfiguration configuration) {
-        log.debug("[getEntitySchema] {} ", configuration);
-        return getEntitySchema(configuration.getDataSet().getDataStore(), configuration.getDataSet().getEntity().name(), "", "");
+        Schema s = null;
+        switch (configuration.getLeadAction()) {
+        case getLead:
+        case getMultipleLeads:
+        case getLeadsByList:
+            Schema fullLeadSchema = getEntitySchema(configuration.getDataSet().getDataStore(),
+                    configuration.getDataSet().getEntity().name(), "", "");
+            Builder b = recordBuilder.newSchemaBuilder(Type.RECORD);
+            fullLeadSchema.getEntries().stream().filter(entry -> configuration.getFields().contains(entry.getName()))
+                    .forEach(entry -> b.withEntry(entry));
+            s = b.build();
+            break;
+        case getLeadActivity:
+            s = getLeadActivitiesSchema();
+            break;
+        case getLeadChanges:
+            s = getLeadChangesSchema();
+            break;
+        }
+        log.warn("[getEntitySchema] schema: {}", s.getEntries().stream().map(Entry::getName).collect(toList()));
+        return s;
     }
 
     public Schema getEntitySchema(final MarketoDataStore dataStore, final String entity, final String customObjectName,
             final String listAction) {
-        log.debug("[getEntitySchema] {} - {} - {}- {}", dataStore, entity, customObjectName, listAction);
         try {
             initClients(dataStore);
             String accessToken = authorizationClient.getAccessToken(dataStore);
@@ -337,135 +354,118 @@ public class MarketoService {
         return json;
     }
 
+    private boolean hasJsonValue(JsonValue value) {
+        if (value == null) {
+            return false;
+        }
+        if (value.getValueType().equals(ValueType.NULL)) {
+            return false;
+        }
+        return true;
+    }
+
     public Record convertToRecord(final JsonObject json, final Map<String, Entry> schema) {
-        log.debug("[convertToRecord] json: {} with schema: {}.", json, schema);
         Record.Builder b = getRecordBuilder().newRecordBuilder();
-        java.util.Set<java.util.Map.Entry<String, JsonValue>> props = json.entrySet();// new HashSet<>();
-        // props.addAll(json.entrySet());
-        // TODO check if json is not missing a value in master schema. Otherwise this will lead to a
-        // ArrayIndexOutOfBoundsException
-        log.warn("[convertToRecord] {} vs {}", json.entrySet().size(), schema.keySet().size());
-        // if (json.entryset().size() < schema.keyset().size()) {
-        // schema.keyset().stream().filter(s -> json.get(s) == null).foreach(s -> {
-        // schema.entry ent = schema.get(s);
-        // log.warn("[converttorecord] adding schema column : {}.", ent.getname());
-        // props.add(new abstractmap.simpleentry<>(ent.getname(), jsonvalue.null));
-        // });
-        // }
-        for (java.util.Map.Entry<String, JsonValue> jsonEntry : props) {
-            String jsonKey = jsonEntry.getKey();
-            Schema.Entry schemaEntry = schema.get(jsonKey);
-            log.warn("schema key {} entry : {}.", jsonKey, schemaEntry);
-            Type type = null;
-            ValueType jsonValueType = jsonEntry.getValue().getValueType();
-            if (schemaEntry == null) {
-                type = Type.STRING;
-                switch (jsonValueType) {
-                case NUMBER:
-                    type = ((JsonNumber) jsonEntry.getValue()).isIntegral() ? Type.LONG : Type.DOUBLE;
-                    break;
-                case TRUE:
-                case FALSE:
-                    type = Type.BOOLEAN;
-                    break;
-                case ARRAY:
-                    type = Type.ARRAY;
-                    break;
-                case NULL:
-                case OBJECT:
-                case STRING:
-                    type = Type.STRING;
-                    break;
-                }
-            } else {
-                type = schemaEntry.getType();
-                if (Type.LONG.equals(type) && DATETIME.equals(schemaEntry.getComment())) {
-                    type = Type.DATETIME;
-                }
-            }
-            log.debug("[convertToRecord] {} - {} ({})", jsonEntry, schemaEntry, jsonValueType);
-            switch (type) {
-            case STRING:
-                switch (jsonValueType) {
-                case ARRAY:
-                    b.withString(jsonKey, json.getJsonArray(jsonKey).stream().map(JsonValue::toString).collect(joining(",")));
-                    break;
-                case OBJECT:
-                    b.withString(jsonKey, String.valueOf(json.getJsonObject(jsonKey).toString()));
-                    break;
-                case STRING:
-                    b.withString(jsonKey, json.getString(jsonKey));
-                    break;
-                case NUMBER:
-                    if (json.getJsonNumber(jsonKey).isIntegral()) {
-                        b.withLong(jsonKey, json.getJsonNumber(jsonKey).longValue());
-                    } else {
-                        b.withDouble(jsonKey, json.getJsonNumber(jsonKey).doubleValue());
+        log.debug("[convertToRecord] json {} VS schema {}", json.entrySet().size(), schema.keySet().size());
+        for (Entry entry : schema.values()) {
+            String key = entry.getName();
+            JsonValue val = json.get(key);
+            switch (entry.getType()) {
+            case ARRAY:
+                String ary = "";
+                if (val != null) {
+                    json.getJsonArray(key).stream().map(JsonValue::toString).collect(joining(","));
+                    // not in a sub array
+                    if (!ary.contains("{")) {
+                        ary = ary.replaceAll("\"", "").replaceAll("(\\[|\\])", "");
                     }
-                    break;
-                case TRUE:
-                case FALSE:
-                    b.withBoolean(jsonKey, json.getBoolean(jsonKey));
-                    break;
-                case NULL:
-                    b.withString(jsonKey, null);
-                    break;
+                }
+                b.withString(key, ary);
+                break;
+            case RECORD:
+            case BYTES:
+            case STRING:
+                if (hasJsonValue(val)) {
+                    switch (val.getValueType()) {
+                    case ARRAY:
+                        b.withString(key, json.getJsonArray(key).stream().map(JsonValue::toString).collect(joining(",")));
+                        break;
+                    case OBJECT:
+                        b.withString(key, String.valueOf(json.getJsonObject(key).toString()));
+                        break;
+                    case STRING:
+                        b.withString(key, json.getString(key));
+                        break;
+                    case NUMBER:
+                        b.withString(key, String.valueOf(json.getJsonNumber(key)));
+                        break;
+                    case TRUE:
+                    case FALSE:
+                        b.withString(key, String.valueOf(json.getBoolean(key)));
+                        break;
+                    case NULL:
+                        b.withString(key, null);
+                        break;
+                    }
+                } else {
+                    b.withString(key, null);
                 }
                 break;
             case INT:
-                b.withInt(jsonKey, jsonValueType.equals(NULL) ? 0 : json.getInt(jsonKey));
+                b.withInt(key, hasJsonValue(val) ? json.getInt(key) : 0);
                 break;
             case LONG:
-                b.withLong(jsonKey, jsonValueType.equals(NULL) ? 0 : json.getJsonNumber(jsonKey).longValue());
+                b.withLong(key, hasJsonValue(val) ? json.getJsonNumber(key).longValue() : 0);
                 break;
             case FLOAT:
-                b.withFloat(jsonKey, jsonValueType.equals(NULL) ? 0 : Float.valueOf(json.getString(jsonKey)));
-                break;
             case DOUBLE:
-                b.withDouble(jsonKey, jsonValueType.equals(NULL) ? 0 : json.getJsonNumber(jsonKey).doubleValue());
+                b.withDouble(key, hasJsonValue(val) ? json.getJsonNumber(key).doubleValue() : 0);
                 break;
             case BOOLEAN:
-                b.withBoolean(jsonKey, jsonValueType.equals(NULL) ? false : json.getBoolean(jsonKey));
+                b.withBoolean(key, hasJsonValue(val) ? json.getBoolean(key) : null);
                 break;
             case DATETIME:
                 try {
-                    b.withDateTime(jsonKey, jsonValueType.equals(NULL) ? null
-                            : new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(json.getString(jsonKey)));
+                    b.withDateTime(key,
+                            hasJsonValue(val) ? new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(json.getString(key))
+                                    : null);
                 } catch (ParseException e1) {
                     log.error("[convertToRecord] Date parsing error: {}.", e1.getMessage());
                 }
                 break;
-            case ARRAY:
-                String ary = json.getJsonArray(jsonKey).stream().map(JsonValue::toString).collect(joining(","));
-                // not in a sub array
-                if (!ary.contains("{")) {
-                    ary = ary.replaceAll("\"", "").replaceAll("(\\[|\\])", "");
-                }
-                b.withString(jsonKey, ary);
-                break;
-            case BYTES:
-            case RECORD:
-                b.withString(jsonKey, json.getString(jsonKey));
             }
         }
         Record record = b.build();
-        log.warn("[convertToRecord] returning : {}. (schema: {}).", record, record.getSchema());
+        log.debug("[convertToRecord] returning : {}.", record);
         return record;
     }
 
-    Schema getLeadChangesAndActivitiesSchema() {
+    Schema getLeadActivitiesSchema() {
         return recordBuilder.newSchemaBuilder(Type.RECORD)
                 .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_ACTIVITY_DATE).withType(Type.STRING)
                         .withComment(DATETIME).build())
                 .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_ACTIVITY_TYPE_ID).withType(Type.INT).build())
                 .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_ATTRIBUTES).withType(Type.STRING).build())
-                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_FIELDS).withType(Type.STRING).build())
                 .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_CAMPAIGN_ID).withType(Type.INT).build())
+                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_ID).withType(Type.INT).build())
                 .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_LEAD_ID).withType(Type.INT).build())
                 .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_MARKETO_GUID).withType(Type.STRING).build())
                 .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_PRIMARY_ATTRIBUTE_VALUE).withType(Type.STRING).build())
-                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_PRIMARY_ATTRIBUTE_VALUE_ID).withType(Type.INT).build())
-                //
+                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_PRIMARY_ATTRIBUTE_VALUE_ID).withType(Type.INT).build()) //
+                .build();
+    }
+
+    Schema getLeadChangesSchema() {
+        return recordBuilder.newSchemaBuilder(Type.RECORD)
+                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_ACTIVITY_DATE).withType(Type.STRING)
+                        .withComment(DATETIME).build())
+                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_ACTIVITY_TYPE_ID).withType(Type.INT).build())
+                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_ATTRIBUTES).withType(Type.STRING).build())
+                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_CAMPAIGN_ID).withType(Type.INT).build())
+                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_FIELDS).withType(Type.STRING).build())
+                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_ID).withType(Type.INT).build())
+                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_LEAD_ID).withType(Type.INT).build())
+                .withEntry(recordBuilder.newEntryBuilder().withName(ATTR_MARKETO_GUID).withType(Type.STRING).build()) //
                 .build();
     }
 

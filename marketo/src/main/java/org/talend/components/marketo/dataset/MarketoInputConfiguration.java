@@ -130,10 +130,6 @@ public class MarketoInputConfiguration implements Serializable {
     @Documentation("Fields")
     private List<String> fields = Arrays.asList("id", "firstName", "lastName", "email", "createdAt", "updatedAt");
 
-    /*
-     * 2.For get Lead changes,there are two situations if leave Fields empty.Please see two attached pic getLead_Fields_Null_1.png
-     * and getLead_Fields_Null_2.png
-     */
     public enum LeadAction {
         getLead,
         getMultipleLeads,
